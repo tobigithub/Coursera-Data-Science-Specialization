@@ -70,6 +70,27 @@ plot(aggregate(steps ~ interval, FUN = mean, data = activity)$steps, type = "l",
 ![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
 
 
+> Which 5-minute interval, on average across all the days in the dataset, 
+> contains the maximum number of steps?
+
+
+```r
+data <- aggregate(steps ~ interval, FUN = mean, data = activity)
+data[which(data$steps == max(data$steps)), ]
+```
+
+```
+##     interval steps
+## 104      835 206.2
+```
+
+```r
+rm(data)
+```
+
+
+The interval 835 (= 08:35) contains the maximum average number of steps (206).
+
 ## Imputing missing values
 
 ```r
@@ -156,7 +177,7 @@ hist(aggregate(steps ~ date, FUN = sum, data = activity2)$steps, breaks = 10,
     main = "Histogram of steps per day (missing values replaced)")
 ```
 
-![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8.png) 
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
 
 
 The mean number of steps taken per day using activity2 is 
@@ -259,7 +280,7 @@ head(plotdata)
 ggplot(plotdata, aes(interval, steps)) + geom_line() + facet_wrap(~week, nrow = 2)
 ```
 
-![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11.png) 
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12.png) 
 
 
 As can be seen, the person gets up a bit later on weekends. There is no sudden

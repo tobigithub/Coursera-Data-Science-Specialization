@@ -48,6 +48,16 @@ plot(aggregate(steps ~ interval, FUN=mean, data=activity)$steps,
      xlab="Time", ylab="Average number of steps")
 ```
 
+> Which 5-minute interval, on average across all the days in the dataset, 
+> contains the maximum number of steps?
+
+```{r}
+data <- aggregate(steps ~ interval, FUN=mean, data=activity)
+data[which(data$steps == max(data$steps)), ]; rm(data)
+```
+
+The interval 835 (= 08:35) contains the maximum average number of steps (206).
+
 ## Imputing missing values
 ```{r}
 sum(is.na(activity$steps))
