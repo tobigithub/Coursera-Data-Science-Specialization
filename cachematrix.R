@@ -68,29 +68,29 @@ cacheSolve <- function(x, ...) {
 
 ### A sample application of the two functions including output:
 # Use macheCacheMatrix() to store the four included functions in the list "mat".
-mat <- makeCacheMatrix()
+# > mat <- makeCacheMatrix()
 
 # Use the set function in that list (stored as set) to set the matrix to a
 # 3x3 matrix of random numbers. This matrix is not stored in the global
 # environment but in the parent environment of the function.
-mat$set(matrix(rnorm(9), nrow = 3))
+# > mat$set(matrix(rnorm(9), nrow = 3))
 
 # Get the created matrix
-mat$get()
-# [,1]       [,2]        [,3]
-# [1,] -1.2932742 -1.2479798 -0.05475115
-# [2,] -0.7045076 -0.2535353  0.39429789
-# [3,]  1.0195027  0.5456111 -0.53298341
+# > mat$get()
+# [,1]        [,2]       [,3]
+# [1,] -0.2480660  0.01959177 -0.2497007
+# [2,]  0.2385205  2.48592457 -2.4539461
+# [3,]  0.2587334 -0.15186117 -1.9557446
 
 # Using the list (not the matrix) as an input to cacheSolve returns the inverse
-cacheSolve(mat)
+# > cacheSolve(mat)
 # [,1]      [,2]      [,3]
 # [1,] -1.0350765 -8.992196 -6.546043
 # [2,]  0.3428151  9.640222  7.096562
 # [3,] -1.6289806 -7.331853 -7.132953
 
 # Second time. The value from the cache sould be used
-cacheSolve(mat)
+# > cacheSolve(mat)
 # getting cached data
 # [,1]      [,2]      [,3]
 # [1,] -1.0350765 -8.992196 -6.546043
@@ -100,10 +100,10 @@ cacheSolve(mat)
 # Now overwriting the original matrix with a 4x4 matrix of random numbers.
 # The inverse should be recalculated since the set function not only sets
 # the matrix but also sets the inverse to NULL.
-mat$set(matrix(rnorm(16), nrow = 4))
+# > mat$set(matrix(rnorm(16), nrow = 4))
 
 # Calculating the inverse.
-cacheSolve(mat)
+# > cacheSolve(mat)
 # [,1]       [,2]       [,3]      [,4]
 # [1,]  0.05901862  0.3667477  0.4990513 0.2687909
 # [2,] -0.52937778 -0.4574198 -0.1544053 1.5542657
@@ -111,7 +111,7 @@ cacheSolve(mat)
 # [4,]  0.05051576 -0.4257568  0.3065151 0.3811089
 
 # Second time. Again the value from the cache should be used:
-cacheSolve(mat)
+# > cacheSolve(mat)
 # getting cached data
 # [,1]       [,2]       [,3]      [,4]
 # [1,]  0.05901862  0.3667477  0.4990513 0.2687909
