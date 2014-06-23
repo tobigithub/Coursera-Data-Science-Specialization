@@ -1,10 +1,5 @@
----
-title: "The impact of weather events across the USA"
-output:
-  html_document:
-    keep_md: yes
-date: "Sunday, June 22, 2014"
----
+# The impact of weather events across the USA
+Sunday, June 22, 2014  
 
 ## Synopsis
 This document briefly analyzes the impact of different weather events that occured
@@ -18,7 +13,8 @@ group of events that are relatively harmful to health is comprised of Excessive 
 Thunderstorms, Floods, and Lightning.
 
 ## Data processing
-```{r}
+
+```r
 setwd(dir = "~\\GitHub\\Storms\\")
 # download.file(url = "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", 
 # destfile = "stormdata.csv.bz2")
@@ -46,7 +42,8 @@ stormdata <- cbind(stormdata, propertydamage)
 ```
 
 ## Results
-```{r}
+
+```r
 # Which are the most harmful events regarding health?
 fatalities <- tapply(X = stormdata$FATALITIES, INDEX = stormdata$EVTYPE, FUN = sum)
 fatalities2 <- fatalities[which(fatalities>100)]
@@ -76,21 +73,38 @@ geom_point(aes(colour=Damagetype), stat="identity", size=5) +
 scale_y_sqrt(breaks = ybreaks) + xlab("Eventtype") + 
 opts(axis.text.x=theme_text(angle=-90)) + 
 ggtitle("Amount of fatalities and injuries depending on the event type")
-print(healthp)
+```
 
 ```
+## 'opts' is deprecated. Use 'theme' instead. (Deprecated; last used in version 0.9.1)
+## theme_text is deprecated. Use 'element_text' instead. (Deprecated; last used in version 0.9.1)
+```
+
+```r
+print(healthp)
+```
+
+![plot of chunk unnamed-chunk-2](./Stormpaper_files/figure-html/unnamed-chunk-2.png) 
 As already pointed out in the synopsis the most harmful events are tornados,
 excessive heat, thunderstorms, floods, and lightning. The events are a little
 different with respect to the relative amounts of fatalities and injuries.
 In general, injuries and fatalities are positively correlated and usually the
 number of injuries is higher than the number of fatalities. 
 
-```{r}
+
+```r
 ## Which are the most economically harmful events?
 econdamage <- tapply(X = stormdata$propertydamage, INDEX = stormdata$EVTYPE, FUN = sum)
 econdamage2 <- econdamage[which(econdamage>10**10)]
 econdamage2 <- sort(econdamage2, decreasing = T)
 econdamage2
+```
+
+```
+##             FLOOD HURRICANE/TYPHOON           TORNADO       STORM SURGE 
+##         1.447e+11         6.931e+10         5.694e+10         4.332e+10 
+##       FLASH FLOOD              HAIL         HURRICANE 
+##         1.614e+10         1.573e+10         1.187e+10
 ```
 With respect to the damage to property tornados are less important. Floods 
 caused roughly twice the damage of the second most dangerous event. 
