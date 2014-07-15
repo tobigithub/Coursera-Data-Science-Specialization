@@ -4,7 +4,7 @@
 Loading the data using read.csv():
 
 ```{r}
-activity <- read.csv("~/GitHub/RepData_PeerAssessment1/activity.csv")
+activity <- read.csv("~/RepData_PeerAssessment1/activity.csv")
 ```
 
 The tapply function with the arguments `FUN = sum` and date as the index sums 
@@ -64,7 +64,7 @@ It would have been possible to plot the time of the day, too, but that would
 have required converting the data into a time series which was not the task
 (the task was to use `type = "l"`).
 ```{r}
-interval.steps <- tapply(X = activity$steps, INDEX = activity$date, 
+interval.steps <- tapply(X = activity$steps, INDEX = activity$interval, 
                          FUN = mean, na.rm = T)
 plot(interval.steps, type="l", xaxt="n",
      main="Daily activity pattern", 
@@ -103,17 +103,17 @@ for (i in 1:nrow(activity2)){
             int_nr <- activity2[i, "interval"]
             
             # Store replacement value in the object replacement
-            replacement <- interval.steps[interval.steps$interval == int_nr,]
-            # Round mean because steps is an integer
-            replacement <- round(replacement$steps)
+            replacement <- interval.steps[names(interval.steps) == int_nr]
+            # Round mean because steps is supposed to be integer
+            replacement <- round(replacement)
             
             # Replace NA by replacement
             activity2[i, 1] <- replacement
-            }
       }
+}
 
 # Show some rows of the resuting data frame. These were all NA before:
-activity2[109:130,]
+activity2[109:120,]
 ```
 
 Next, let's check the differences between activity and activity2 which contains
@@ -121,7 +121,8 @@ the imputed values:
 
 ```{r}
 hist(aggregate(steps ~ date, FUN=sum, data=activity2)$steps, breaks=10,
-     main="Histogram of steps per day (missing values replaced)")
+     main="Histogram of steps per day (missing values replaced)", col = "gray",
+     xlab = "steps")
 ```
 
 The mean number of steps taken per day using activity2 is 
@@ -149,7 +150,9 @@ concentration of observations around the mean of the distribution (note the
 different y-axis limits).
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
 Task:
+
 > Make a panel plot containing a time series plot (i.e. type = "l") of 
 > the 5-minute interval (x-axis) and the average number of steps taken, 
 > averaged across all weekday days or weekend days (y-axis).
