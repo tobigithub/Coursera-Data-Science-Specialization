@@ -104,4 +104,4 @@ averages <- aggregate(data, by = list(data$Subject, data$Activity), FUN = mean)
 averages <- averages[, -c(3, 4)]
 names(averages)[c(1,2)] <- c("Subject", "Activity")
 # Write this table to a txt file
-write.table(averages, "averages.txt", sep=";")
+write.table(averages, "averages.txt", sep=";", row.names = F)
