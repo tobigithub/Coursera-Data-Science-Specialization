@@ -291,5 +291,5 @@ ggplot(plotdata, aes(interval, steps)) + geom_line() + facet_wrap(~week, nrow=2)
 ![plot of chunk unnamed-chunk-14](./PA1_template_files/figure-html/unnamed-chunk-14.png) 
 
 As can be seen, the person gets up a bit later on weekends. There is no sudden
-increase in steps at a few minutes past 5. Additionally, the activity is more 
+increase in steps at a few minutes past five. Additionally, the activity is more 
 evenly distributed.
