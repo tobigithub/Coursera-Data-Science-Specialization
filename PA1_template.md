@@ -5,8 +5,6 @@ Downloading data and reading it using read.csv():
 
 
 ```r
-setwd("/home/khl4v/Dropbox/Diverses/Coursera/Data Science Specialization/5 Reproducible research/Assignments/RepData_PeerAssessment1/")
-
 if (!file.exists("activity.zip")){
       download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip",
                     destfile = "activity.zip", method = "wget")

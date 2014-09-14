@@ -58,9 +58,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="loading-and-preprocessing-the-data" class="section level2">
 <h2>Loading and preprocessing the data</h2>
 <p>Downloading data and reading it using read.csv():</p>
-<pre class="r"><code>setwd(&quot;/home/khl4v/Dropbox/Diverses/Coursera/Data Science Specialization/5 Reproducible research/Assignments/RepData_PeerAssessment1/&quot;)
-
-if (!file.exists(&quot;activity.zip&quot;)){
+<pre class="r"><code>if (!file.exists(&quot;activity.zip&quot;)){
       download.file(&quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip&quot;,
                     destfile = &quot;activity.zip&quot;, method = &quot;wget&quot;)
       unzip(&quot;activity.zip&quot;)
