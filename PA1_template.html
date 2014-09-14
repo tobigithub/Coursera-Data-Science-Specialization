@@ -57,8 +57,15 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h1>Reproducible Research: Peer Assessment 1</h1>
 <div id="loading-and-preprocessing-the-data" class="section level2">
 <h2>Loading and preprocessing the data</h2>
-<p>Loading the data using read.csv():</p>
-<pre class="r"><code>activity &lt;- read.csv(&quot;~/RepData_PeerAssessment1/activity.csv&quot;)</code></pre>
+<p>Downloading data and reading it using read.csv():</p>
+<pre class="r"><code>setwd(&quot;/home/khl4v/Dropbox/Diverses/Coursera/Data Science Specialization/5 Reproducible research/Assignments/RepData_PeerAssessment1/&quot;)
+
+if (!file.exists(&quot;activity.zip&quot;)){
+      download.file(&quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip&quot;,
+                    destfile = &quot;activity.zip&quot;, method = &quot;wget&quot;)
+      unzip(&quot;activity.zip&quot;)
+}
+activity &lt;- read.csv(&quot;~/RepData_PeerAssessment1/activity.csv&quot;)</code></pre>
 <p>The tapply function with the arguments <code>FUN = sum</code> and date as the index sums up all steps taken during a day and outputs a vector.</p>
 <pre class="r"><code>total.steps &lt;- tapply(X = activity$steps, INDEX = activity$date, FUN = sum)</code></pre>
 </div>

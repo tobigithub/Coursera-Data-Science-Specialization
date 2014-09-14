@@ -1,10 +1,17 @@
 # Reproducible Research: Peer Assessment 1
 
 ## Loading and preprocessing the data
-Loading the data using read.csv():
+Downloading data and reading it using read.csv():
 
 
 ```r
+setwd("/home/khl4v/Dropbox/Diverses/Coursera/Data Science Specialization/5 Reproducible research/Assignments/RepData_PeerAssessment1/")
+
+if (!file.exists("activity.zip")){
+      download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip",
+                    destfile = "activity.zip", method = "wget")
+      unzip("activity.zip")
+}
 activity <- read.csv("~/RepData_PeerAssessment1/activity.csv")
 ```
 
