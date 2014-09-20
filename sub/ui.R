@@ -10,13 +10,13 @@ shinyUI(pageWithSidebar(
             radioButtons("type", " ",
                          list("All" = "all",
                               "Buy it now" = "buyitnow",
-                              "Auction" = "auction"), selected="All"),
+                              "Auction" = "auction"), selected="all"),
             
             helpText("Condition:"),
             radioButtons("condition", " ",
                          list("All" = "all",
                               "New" = "new",
-                              "Used" = "used"), selected="All"),
+                              "Used" = "used"), selected="all"),
             
             sliderInput("maxarticles", 
                         "Maximum number of auctions that should be loaded:", 
