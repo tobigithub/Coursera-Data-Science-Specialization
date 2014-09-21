@@ -98,12 +98,16 @@ scrapeEbay <- function(search = NA, cond = "all", auctiontype = "all", maxn = 10
             }
             
             prices <- c(prices, Pricevec)
-            alldates <- rnorm(20) # c(alldates, dates) ############################################
+            # alldates <- c(alldates, dates)
       }
       prices <- na.omit(prices)
-      alldates <- na.omit(alldates)
-      resultlist <- list(prices, alldates, generatedurl)
-      names(resultlist) <- c("Prices", "Date", "URL")
+      # alldates <- na.omit(alldates)
+      resultlist <- list(prices, 
+                         # alldates, 
+                         generatedurl)
+      names(resultlist) <- c("Prices",
+                             # "Date", 
+                             "URL")
       return(resultlist)
 }
 
@@ -112,7 +116,9 @@ scrapeEbay <- function(search = NA, cond = "all", auctiontype = "all", maxn = 10
 shinyServer(function(input, output) { 
       
       prices_dummylist <- list(0, c(" ", " "), " ")
-      names(prices_dummylist) <- c("Prices", "Date", "URL")
+      names(prices_dummylist) <- c("Prices",
+                                   # "Date",
+                                   "URL")
       
       prices_reactive <- reactive({
             if (input$go == 0) return(prices_dummylist)
@@ -128,55 +134,37 @@ shinyServer(function(input, output) {
       # RENDER PLOT:
       output$ebay_histogram <- renderPlot(function() {
             hist(x=prices_reactive()$Prices, col = "blue", breaks = as.numeric(input$bars), 
-                 main="Histogram", xlab="Price including shipping", ylab="Amount")
+                 main="Histogram", xlab="Price", ylab="Amount")
       })
       
       # TEXT OUTPUT
-      #   output$text1 <- renderText({ 
-      #     "Mininum:"
-      #   })
       output$text1 <- renderText({ 
             paste("Minimum:", as.numeric(summary(object=prices_reactive()$Prices)[1]))
       })
-      
-      #   output$text3 <- renderText({ 
-      #     "Median:"
-      #   })
+
       output$text3 <- renderText({ 
             paste("Median:", as.numeric(summary(object=prices_reactive()$Prices)[3]))
       })
       
-      #   output$text5 <- renderText({ 
-      #     "Mittelwert:"
-      #   })
       output$text5 <- renderText({ 
             paste("Mean:", as.numeric(summary(object=prices_reactive()$Prices)[4]))
       })
       
-      #   output$text7 <- renderText({ 
-      #     "Maximum:"
-      #   })
       output$text7 <- renderText({ 
             paste("Maximum:", as.numeric(summary(object=prices_reactive()$Prices)[6]))
       })
       
       #   Number of auctions
-      #   output$text9 <- renderText({ 
-      #     "Gefundene Auktionen:"
-      #   })
       output$n <- renderText({ 
             paste("Auctions:", length(prices_reactive()$Prices))
       })
       
       # Date Range
-      #   output$text10 <- renderText({ 
-      #     "Datumsbereich:"
-      #   })
-      output$daterange <- renderText({ 
-            paste0("Date range: ", prices_reactive()$Date[length(prices_reactive()$Date)],
-                   " - ",
-                   prices_reactive()$Date[1])
-      })
+#       output$daterange <- renderText({ 
+#             paste0("Date range: ", prices_reactive()$Date[length(prices_reactive()$Date)],
+#                    " - ",
+#                    prices_reactive()$Date[1])
+#       })
       
       # Generated URL
       output$text11 <- renderText({ 

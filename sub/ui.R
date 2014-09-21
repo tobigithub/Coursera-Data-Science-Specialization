@@ -32,27 +32,18 @@ shinyUI(pageWithSidebar(
                         min=5, max=100, value=15),
             br(),
             
-            # Geht das?
-            #     textOutput(c("text1", "text2")),
-            #     textOutput(c("text3", "text4")),
-            #     textOutput(c("text5", "text6")),
-            #     textOutput(c("text7", "text8")),
             helpText("Statistics:"),
             textOutput("text1"),
-            #   textOutput("text2"),
             
             textOutput("text3"),
-            #   textOutput("text4"),
             
             textOutput("text5"),
-            #   textOutput("text6"),
             
             textOutput("text7"),
-            #  textOutput("text8"),
             br(),
             
             textOutput("n"),
-            textOutput("daterange"),
+            # textOutput("daterange"),
             textOutput("text11"),
             textOutput("generatedurl")
       ),
