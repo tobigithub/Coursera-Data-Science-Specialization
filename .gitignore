@@ -1,2 +1,17 @@
 data/stormdata.csv
 stormdata.csv.bz2
+.RData
+*.Rhistory
+Rprofile
+stormdata.csv
+Stormpaper_cache/html/unnamed-chunk-2_f3906b67ca115cf501812e8260a276fe.RData
+Stormpaper_cache/html/unnamed-chunk-2_f3906b67ca115cf501812e8260a276fe.rdb
+Stormpaper_cache/html/unnamed-chunk-2_f3906b67ca115cf501812e8260a276fe.rdx
+Stormpaper_cache/html/unnamed-chunk-3_416c30833c8623527963037e15fc6e71.RData
+Stormpaper_cache/html/unnamed-chunk-3_416c30833c8623527963037e15fc6e71.rdb
+Stormpaper_cache/html/unnamed-chunk-3_416c30833c8623527963037e15fc6e71.rdx
+Stormpaper_cache/html/__packages
+Stormpaper_cache/latex/unnamed-chunk-2_e4e054c442cb6d1453ee70008cad1cff.RData
+Stormpaper_cache/latex/unnamed-chunk-2_e4e054c442cb6d1453ee70008cad1cff.rdb
+Stormpaper_cache/latex/unnamed-chunk-2_e4e054c442cb6d1453ee70008cad1cff.rdx
+Stormpaper_cache/latex/__packages
