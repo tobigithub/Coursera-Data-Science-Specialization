@@ -1,7 +1,7 @@
 ---
-title: "The economic and health impact of weather events across the USA, 1996 - 2011"
+title: "Tornadoes and floods dealt the largest damage to the economy and health respectively
+- USA, 1996 - 2011"
 output: html_document
-html_document:
 keep_md: yes
 ---
 
@@ -27,8 +27,7 @@ library(knitr)
 
 Downloading and reading in the data (source: NOAA):
 
-```{r}
-setwd(dir = "/home/khl4v/Github/Storms/")
+```{r, cache=TRUE}
 if (!file.exists("stormdata.csv.bz2")){
       download.file(url = "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", destfile = "stormdata.csv.bz2")
       }
@@ -46,7 +45,7 @@ see http://www.ncdc.noaa.gov/stormevents/details.jsp. During most of the years
 in the data set only tornadoes were recorded. Thus, all years prior to 1996 
 will be dropped in order to avoid the biasing of subsequent estimates.
 
-```{r}
+```{r, cache=TRUE}
 # Format date variable
 stormdata$BGN_DATE <- as.character(stormdata$BGN_DATE)
 # Function to select only the date part
@@ -122,9 +121,10 @@ The event types should belong to 48 standard types, see the National Weather Ser
 
 ```{r}
 stormdata$EVTYPE <- as.character(stormdata$EVTYPE)
+length(unique(stormdata$EVTYPE))
 ```
 
-In the subset of events after 1996 there are `r length(unique(stormdata$EVTYPE))` different types. Without domain knowledge it would be problematic to categorize all the rare events as on of the standard types, so this attempt was not made. However among the most common events are "THUNDERSTORM WIND" and "TSTM WIND" which seem to be the same which is why all event types including the term "TSTM WIND" will be categorized as "THUNDERSTORM WIND". The same applies for "WILDFIRE" as opposed to "WILD/FOREST FIRE" and "RIP CURRENT" as opposed to "RIP CURRENTS"
+In the subset of events after 1996 there are `r length(unique(stormdata$EVTYPE))` different types. Without domain knowledge it would be problematic to categorize all the rare events as one of the standard types, so this attempt was not made. However, among the most common events are "THUNDERSTORM WIND" and "TSTM WIND" which seem to be the same which is why all event types including the term "TSTM WIND" will be categorized as "THUNDERSTORM WIND". The same applies for "WILDFIRE" / "WILD/FOREST FIRE" and "RIP CURRENT" / "RIP CURRENTS".
 
 ```{r}
 tstm_index <- grep(pattern = "TSTM WIND", x = stormdata$EVTYPE)
@@ -172,23 +172,23 @@ m_injuries2 <- melt(injuries2, value.name="Injuries")
 m_fatalities2 <- melt(fatalities2, value.name="Fatalities")
 plotdata <- merge(m_fatalities2, m_injuries2, by = "Var1")
 colnames(plotdata)[1] <- "Event Type"
-plotdata <- melt(plotdata, id.vars = c("Event Type"), value.name = "Amount", 
+plotdata <- melt(plotdata, id.vars = c("Event Type"), 
+                 value.name = "Amount", 
                  variable.name = "Damagetype")
 
 ybreaks <- 150 * 2^(0:10)
-healthp <- ggplot(plotdata, 
-                  aes(x=reorder(plotdata$`Event Type`, plotdata$Amount, FUN=sum, order=T),
-                      y=Amount)) + 
+ggplot(plotdata, 
+       aes(x=reorder(plotdata$`Event Type`, plotdata$Amount, FUN=sum, order=T),
+           y=Amount)) + 
       geom_point(aes(colour=Damagetype), stat="identity", size=5) +
       scale_y_sqrt(breaks = ybreaks) + xlab("Event Type") +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
       ggtitle("Fatalities and injuries depending on the event type (1996 - 2011)")
-print(healthp)
 ```
 
 Tornadoes caused by far the most injuries (please note the logarithmic scale). A second group of events consisting of excessive heat, flood, thunderstorm wind and lightning also caused a considerable amount of injuries. Excessive heat caused the most fatalities, followed by tornadoes. 
 
-In general, all of the top 16 events cause more injuries than fatalities. One notable exception are flash floods which cause nearly as many fatalities as injuries so that the number of fatalities caused by flash floods is the third highest.
+In general, all of the top 16 events cause more injuries than fatalities. One notable exception are flash floods which cause nearly as many fatalities as injuries so that the number of fatalities caused by flash floods is the third highest although regarding the sum of fatalities and injuries flash floods is at rank six.
 
 ```{r, results='asis'}
 # Table
@@ -207,7 +207,7 @@ kable(tabledata[order(tabledata$Sum, decreasing = T), ], row.names = F, digits =
 ### Economic damage
 Economic damage is defined here as the sum of property damage and crop damage. As stated in the NOAA's documentation many of these numbers are estimates. 
 
-```{r}
+```{r, fig.cap="Figure 2: Economic damage"}
 # NOTE: This section was not included in the chapter on data processing 
 #       because it is mainly about selecting from the processed data
 ## Select economically most harmful events
@@ -230,20 +230,18 @@ plotdata <- melt(plotdata, id.vars = c("Event Type"), value.name = "Dollars",
                  variable.name = "Damagetype")
 
 ybreaks <- 2 * 2^(0:10)
-dmgp <- ggplot(plotdata, 
-               aes(x=reorder(plotdata$`Event Type`, plotdata$Dollars, FUN=sum, order=T), 
-                   y=Dollars)) + 
+ggplot(plotdata, 
+       aes(x=reorder(plotdata$`Event Type`, plotdata$Dollars, FUN=sum, order=T), 
+           y=Dollars)) + 
       geom_point(aes(colour=Damagetype), stat="identity", size=5) +
       scale_y_sqrt(breaks = ybreaks) +
       xlab("Event Type") + ylab("Billions of Dollars") +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
       ggtitle("Economic damage depending on the event type (1996 - 2011)")
-print(dmgp)
-
 ```
 
-With respect to the economic damage tornadoes are less important. Floods 
-caused roughly twice the damage of the second most dangerous event, hurricanes. The vast majority of the top events inflicts a much larger damage to property than to crops. The exception here are droughts which are by far the top cause of crop damage and which caused about 13$bn crop damage and just 1$bn property damage.
+With respect to economic damage tornadoes are less important. Floods 
+caused roughly twice the damage of the second most dangerous event, hurricanes (again, please note the log scale). The vast majority of the top events inflicts a much larger damage to property than to crops. The exception here are droughts which are by far the top cause of crop damage and which caused about 13\$bn of crop damage and just 1\$bn of property damage.
 
 ```{r, results='asis'}
 # Table
