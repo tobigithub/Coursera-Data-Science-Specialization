@@ -1,18 +1,24 @@
 library(shiny)
 shinyUI(pageWithSidebar(
-      headerPanel("Price summary of recent auctions on ebay.com"),
+      h3("Price summary of recent auctions on ebay.com"),
       
       sidebarPanel(
-            helpText("Search term:"),
+            h4("Search term:"),
+            helpText("Input a product you are looking for. You can also use 
+                        operators like 'minus' as on the ebay page, for example:
+                        'Window -broken'"),
             textInput("searchterm", " ", ""),
             
-            helpText("Format:"),
+            h4("Format:"),
+            helpText("You can search for only auctions, only articles that are 
+                     for immediate sale at a fixed price or both."),
             radioButtons("type", " ",
                          list("All" = "all",
                               "Buy it now" = "buyitnow",
                               "Auction" = "auction"), selected="all"),
             
-            helpText("Condition:"),
+            h4("Condition:"),
+            helpText("You can search for new articles, used articles or both"),
             radioButtons("condition", " ",
                          list("All" = "all",
                               "New" = "new",
@@ -22,17 +28,14 @@ shinyUI(pageWithSidebar(
                         "Maximum number of auctions that should be loaded:", 
                         min=50, max=400, value=100, step=50),
             
+            h3("Load auction results"),
             actionButton("go", "Go!"),
             
-            br(),
-            br(),
-            br(),
-            
+            h4("Statistics"),        
             sliderInput("bars", "Number of bars in the histogram (target value):", 
                         min=5, max=100, value=15),
             br(),
             
-            helpText("Statistics:"),
             textOutput("text1"),
             
             textOutput("text3"),
@@ -45,6 +48,7 @@ shinyUI(pageWithSidebar(
             textOutput("n"),
             # textOutput("daterange"),
             textOutput("text11"),
+            helpText("You can find the results of your search on the ebay page at:"),
             textOutput("generatedurl")
       ),
       
