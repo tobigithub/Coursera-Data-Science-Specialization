@@ -1,0 +1,132 @@
+---
+title: "Predicting the quality of the execution of physical exercises using measurement
+  data"
+author: "Christian Thiele"
+date: "Sunday, September 21, 2014"
+output: html_document
+keep_md: yes
+---
+
+Load necessary packages:
+```{r}
+library(caret)
+```
+
+Downloading and reading in the data:
+
+```{r, cache=TRUE}
+setwd("C:/Users/Khl4v/Documents/Github/Predicting-exercise-quality/")
+if (!file.exists("training.csv")){
+      download.file(url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", 
+                    destfile = "training.csv")
+      }
+
+if (!file.exists("testing.csv")){
+      download.file(url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", 
+                    destfile = "testing.csv")
+      }
+
+training <- read.csv("training.csv", na.strings = c("#DIV/0!", "NA"))
+test <- read.csv("testing.csv", na.strings = c("#DIV/0!", "NA"))
+```
+
+## Data processing
+There are some variables in the data which will be dropped:
+- X is the row number
+- num_window is an increasing count
+- user_name is the name of the person who performed the exercise. This may be helpful in predicting the quality of the execution here, but I would like to build a model that is more general.
+- timestamps should theoretically play no role regarding the execution of exercises
+
+```{r}
+# Drop variables as described above
+training <- training[, -(1:7)]
+```
+
+Additionally, there may be variables that contain virtually no variation. Those are not helpful in prediction and will be dropped as well. First, columns (features) that contain only NAs will be dropped.
+
+```{r, cache=TRUE}
+training <- training[, colSums(is.na(training)) != nrow(training)]
+
+nzv <- nearZeroVar(training) # 29
+training <- training[, -nzv]; rm(nzv)
+```
+
+There are many rows with missing values. As the intended method in this paper is Random Forest, which does not accept missing values, those rows will be dropped.
+
+```{r}
+training <- training[complete.cases(training), ]
+```
+
+There are `r ncol(training)-1` predictors left. The variable "classe" is to be predicted.
+
+```{r}
+str(training$classe)
+```
+
+#### Partition data
+There are `r nrow(training)` cases in the training data. The data will be split into a training set (70%) and test set(30%). The testing set contains just `nrow (testing)` cases and won't be used in this paper.
+
+```{r, cache=TRUE}
+inTest <- createDataPartition(y = training$classe, p=0.3, list=FALSE)
+test <- training[inTest,]
+
+training <- training[-inTest,]
+
+# Check
+dim(training)
+dim(test)
+```
+
+## Model building
+For prediction the Random Forest algorithm will be used. It uses bootstrapped samples to estimate decision trees. At each split, also the variables that are used as predictors are bootstrapped. All trained trees then "vote" for the class that should be predicted. This algorithm is relatively accurate but prone to overfitting. The CV set will be used to deal with overfitting.
+
+```{r, cache=TRUE}
+# All variables as predictors
+modFit <- train(classe ~ ., data = training, method="rf")
+modFit
+```
+
+Additionally, two more models will be trained that contain less predictors. Instead of the original predictors n principal components will be used. In the paper that accompanies the data set the authors used only 17 of 96 derived features (p3, [Qualitative Activity Recognition of Weight Lifting Exercises](http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf)). 
+
+Thus, models with 10, 17 and 40 predictors will be trained. These choices are a bit arbitrary but within the scope of this paper this approach should suffice. Additionally, a model that uses PCs that contain 95% of the variance will be estimated.
+
+```{r, cache=TRUE}
+modFit10 <- train(classe ~ ., data = training, method="rf", 
+                  preProcess = "pca", pcaComp = 10)
+modFit10
+
+modFit17 <- train(classe ~ ., data = training, method="rf", 
+                  preProcess = "pca", pcaComp = 17)
+modFit17
+
+modFit40 <- train(classe ~ ., data = training, method="rf", 
+                  preProcess = "pca", pcaComp = 40)
+modFit40
+
+modFit95p <- train(classe ~ ., data = training, method="rf", 
+                  preProcess = "pca", thresh = 0.95)
+modFit95p
+```
+
+The models achieved the following in sample accuracies:
+- all variables: `r modFit$results[1,2]`
+- 40 PC: `r modFit40$results[1,2]`
+- 17 PC: `r modFit17$results[1,2]`
+- 10 PC: `r modFit10$results[1,2]`
+- 95% variance PCs: `r modFit95p$results[1,2]`
+
+The model with all possible features has shown the best performance and will be tested using the test set.
+
+```{r}
+pred <- predict(modFit, test)
+test$predRight <- pred==test$classe
+modtable <- table(pred, test$classe)
+# Accuracy
+acctest <- sum(diag(modtable)) / nrow(test)
+```
+
+The model achieves an accuracy of `r acctest`. This is also to be expected in further out of sample applications since the test set was not used before to judge the model. 
+
+```{r}
+modtable
+```
