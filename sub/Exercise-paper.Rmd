@@ -1,10 +1,11 @@
 ---
-title: "Predicting the quality of the execution of physical exercises using measurement
-  data"
+title: Predicting the quality of the execution of physical exercises using measurement
+  data
 author: "Christian Thiele"
 date: "Sunday, September 21, 2014"
-output: html_document
-keep_md: yes
+output:
+  html_document:
+    keep_md: yes
 ---
 
 Load necessary packages:
@@ -15,14 +16,15 @@ library(caret)
 Downloading and reading in the data:
 
 ```{r, cache=TRUE}
-setwd("C:/Users/Khl4v/Documents/Github/Predicting-exercise-quality/")
 if (!file.exists("training.csv")){
       download.file(url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", 
+                    method = "wget", 
                     destfile = "training.csv")
       }
 
 if (!file.exists("testing.csv")){
       download.file(url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", 
+                    method = "wget",
                     destfile = "testing.csv")
       }
 

@@ -61,19 +61,18 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 <p>Load necessary packages:</p>
 <pre class="r"><code>library(caret)</code></pre>
-<pre><code>## Warning: package 'caret' was built under R version 3.0.3</code></pre>
 <pre><code>## Loading required package: lattice
 ## Loading required package: ggplot2</code></pre>
-<pre><code>## Warning: package 'ggplot2' was built under R version 3.0.3</code></pre>
 <p>Downloading and reading in the data:</p>
-<pre class="r"><code>setwd(&quot;C:/Users/Khl4v/Documents/Github/Predicting-exercise-quality/&quot;)
-if (!file.exists(&quot;training.csv&quot;)){
+<pre class="r"><code>if (!file.exists(&quot;training.csv&quot;)){
       download.file(url = &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;, 
+                    method = &quot;wget&quot;, 
                     destfile = &quot;training.csv&quot;)
       }
 
 if (!file.exists(&quot;testing.csv&quot;)){
       download.file(url = &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;, 
+                    method = &quot;wget&quot;,
                     destfile = &quot;testing.csv&quot;)
       }
 
@@ -114,11 +113,9 @@ dim(training)</code></pre>
 <p>For prediction the Random Forest algorithm will be used. It uses bootstrapped samples to estimate decision trees. At each split, also the variables that are used as predictors are bootstrapped. All trained trees then “vote” for the class that should be predicted. This algorithm is relatively accurate but prone to overfitting. The CV set will be used to deal with overfitting.</p>
 <pre class="r"><code># All variables as predictors
 modFit &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;)</code></pre>
-<pre><code>## Loading required package: randomForest</code></pre>
-<pre><code>## Warning: package 'randomForest' was built under R version 3.0.3</code></pre>
-<pre><code>## randomForest 4.6-10
+<pre><code>## Loading required package: randomForest
+## randomForest 4.6-10
 ## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre><code>## Warning: package 'e1071' was built under R version 3.0.3</code></pre>
 <pre class="r"><code>modFit</code></pre>
 <pre><code>## Random Forest 
 ## 
@@ -134,8 +131,8 @@ modFit &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;)</code></p
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.7       0.6    0.05         0.07    
-##    59   0.7       0.6    0.05         0.07    
+##     2   0.7       0.6    0.06         0.07    
+##    59   0.7       0.6    0.07         0.09    
 ##   117   0.7       0.6    0.07         0.08    
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
@@ -209,9 +206,9 @@ modFit &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;)</code></p
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.4    0.07         0.09    
-##    59   0.5       0.3    0.06         0.08    
-##   117   0.5       0.3    0.06         0.08    
+##     2   0.5       0.3    0.07         0.09    
+##    59   0.4       0.3    0.06         0.08    
+##   117   0.4       0.3    0.06         0.08    
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 2.</code></pre>
@@ -282,9 +279,9 @@ modFit &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;)</code></p
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.4    0.06         0.08    
-##    59   0.5       0.4    0.06         0.07    
-##   117   0.5       0.4    0.07         0.08    
+##     2   0.5       0.3    0.08         0.09    
+##    59   0.5       0.3    0.08         0.10    
+##   117   0.5       0.3    0.08         0.09    
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 2.</code></pre>
@@ -355,15 +352,16 @@ modFit &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;)</code></p
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.4    0.06         0.08    
-##    59   0.5       0.3    0.06         0.07    
-##   117   0.5       0.3    0.05         0.07    
+##     2   0.5       0.3    0.06         0.08    
+##    59   0.4       0.3    0.07         0.08    
+##   117   0.4       0.3    0.06         0.08    
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 2.</code></pre>
 <pre class="r"><code>modFit95p &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;, 
                   preProcess = &quot;pca&quot;, thresh = 0.95)</code></pre>
 <pre><code>## Warning: invalid mtry: reset to within valid range
+## Warning: invalid mtry: reset to within valid range
 ## Warning: invalid mtry: reset to within valid range
 ## Warning: invalid mtry: reset to within valid range
 ## Warning: invalid mtry: reset to within valid range
@@ -428,28 +426,28 @@ modFit &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;)</code></p
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.4    0.07         0.09    
-##    59   0.5       0.3    0.06         0.08    
-##   117   0.5       0.3    0.07         0.09    
+##     2   0.4       0.3    0.07         0.08    
+##    59   0.4       0.3    0.08         0.09    
+##   117   0.4       0.3    0.07         0.08    
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 2.</code></pre>
-<p>The models achieved the following in sample accuracies: - all variables: 0.6841 - 40 PC: 0.4836 - 17 PC: 0.5063 - 10 PC: 0.4947 - 95% variance PCs: 0.5046</p>
+## The final value used for the model was mtry = 117.</code></pre>
+<p>The models achieved the following in sample accuracies: - all variables: 0.6601 - 40 PC: 0.4524 - 17 PC: 0.4615 - 10 PC: 0.4598 - 95% variance PCs: 0.4443</p>
 <p>The model with all possible features has shown the best performance and will be tested using the test set.</p>
 <pre class="r"><code>pred &lt;- predict(modFit, test)
 test$predRight &lt;- pred==test$classe
 modtable &lt;- table(pred, test$classe)
 # Accuracy
 acctest &lt;- sum(diag(modtable)) / nrow(test)</code></pre>
-<p>The model achieves an accuracy of 0.7647. This is also to be expected in further out of sample applications since the test set was not used before to judge the model.</p>
+<p>The model achieves an accuracy of 0.8235. This is also to be expected in further out of sample applications since the test set was not used before to judge the model.</p>
 <pre class="r"><code>modtable</code></pre>
 <pre><code>##     
 ## pred  A  B  C  D  E
-##    A 13  1  1  1  1
-##    B  2 10  0  1  2
-##    C  0  3 11  1  0
-##    D  2  0  0  8  0
-##    E  0  1  0  0 10</code></pre>
+##    A 15  1  1  3  1
+##    B  2 13  0  0  1
+##    C  0  0 11  0  1
+##    D  0  1  0  8  1
+##    E  0  0  0  0  9</code></pre>
 </div>
 
 
