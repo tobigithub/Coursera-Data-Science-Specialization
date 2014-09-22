@@ -1,6 +1,4 @@
 # Predicting the quality of the execution of physical exercises using measurement data
-Christian Thiele  
-Sunday, September 21, 2014  
 
 Load necessary packages:
 
@@ -489,17 +487,30 @@ modFit95p
 ```
 
 The models achieved the following in sample accuracies:
-- all variables: 0.6601
-- 40 PC: 0.4524
-- 17 PC: 0.4615
-- 10 PC: 0.4598
-- 95% variance PCs: 0.4443
+* all variables: 0.6601
+
+* 40 PC: 0.4524
+
+* 17 PC: 0.4615
+
+* 10 PC: 0.4598
+
+* 95% variance PCs: 0.4443
 
 The model with all possible features has shown the best performance and will be tested using the test set.
 
 
 ```r
 pred <- predict(modFit, test)
+```
+
+```
+## Loading required package: randomForest
+## randomForest 4.6-10
+## Type rfNews() to see new features/changes/bug fixes.
+```
+
+```r
 test$predRight <- pred==test$classe
 modtable <- table(pred, test$classe)
 # Accuracy

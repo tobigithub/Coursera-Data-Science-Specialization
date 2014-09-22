@@ -1,8 +1,6 @@
 ---
 title: Predicting the quality of the execution of physical exercises using measurement
   data
-author: "Christian Thiele"
-date: "Sunday, September 21, 2014"
 output:
   html_document:
     keep_md: yes
@@ -111,11 +109,15 @@ modFit95p
 ```
 
 The models achieved the following in sample accuracies:
-- all variables: `r modFit$results[1,2]`
-- 40 PC: `r modFit40$results[1,2]`
-- 17 PC: `r modFit17$results[1,2]`
-- 10 PC: `r modFit10$results[1,2]`
-- 95% variance PCs: `r modFit95p$results[1,2]`
+* all variables: `r modFit$results[1,2]`
+
+* 40 PC: `r modFit40$results[1,2]`
+
+* 17 PC: `r modFit17$results[1,2]`
+
+* 10 PC: `r modFit10$results[1,2]`
+
+* 95% variance PCs: `r modFit95p$results[1,2]`
 
 The model with all possible features has shown the best performance and will be tested using the test set.
 

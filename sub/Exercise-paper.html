@@ -6,10 +6,8 @@
 
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta http-equiv="Content-Style-Type" content="text/css" />
 <meta name="generator" content="pandoc" />
 
-<meta name="author" content="Christian Thiele" />
 
 
 <title>Predicting the quality of the execution of physical exercises using measurement data</title>
@@ -54,8 +52,6 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 <div id="header">
 <h1 class="title">Predicting the quality of the execution of physical exercises using measurement data</h1>
-<h4 class="author"><em>Christian Thiele</em></h4>
-<h4 class="date"><em>Sunday, September 21, 2014</em></h4>
 </div>
 
 
@@ -432,10 +428,19 @@ modFit &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;)</code></p
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 117.</code></pre>
-<p>The models achieved the following in sample accuracies: - all variables: 0.6601 - 40 PC: 0.4524 - 17 PC: 0.4615 - 10 PC: 0.4598 - 95% variance PCs: 0.4443</p>
+<p>The models achieved the following in sample accuracies: * all variables: 0.6601</p>
+<ul>
+<li><p>40 PC: 0.4524</p></li>
+<li><p>17 PC: 0.4615</p></li>
+<li><p>10 PC: 0.4598</p></li>
+<li><p>95% variance PCs: 0.4443</p></li>
+</ul>
 <p>The model with all possible features has shown the best performance and will be tested using the test set.</p>
-<pre class="r"><code>pred &lt;- predict(modFit, test)
-test$predRight &lt;- pred==test$classe
+<pre class="r"><code>pred &lt;- predict(modFit, test)</code></pre>
+<pre><code>## Loading required package: randomForest
+## randomForest 4.6-10
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre class="r"><code>test$predRight &lt;- pred==test$classe
 modtable &lt;- table(pred, test$classe)
 # Accuracy
 acctest &lt;- sum(diag(modtable)) / nrow(test)</code></pre>
@@ -462,12 +467,12 @@ $(document).ready(function () {
 
 </script>
 
-<!-- dynamically load mathjax for compatibility with --self-contained -->
+<!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>
