@@ -76,7 +76,13 @@ training &lt;- read.csv(&quot;training.csv&quot;, na.strings = c(&quot;#DIV/0!&q
 test &lt;- read.csv(&quot;testing.csv&quot;, na.strings = c(&quot;#DIV/0!&quot;, &quot;NA&quot;))</code></pre>
 <div id="data-processing" class="section level2">
 <h2>Data processing</h2>
-<p>There are some variables in the data which will be dropped: - X is the row number - num_window is an increasing count - user_name is the name of the person who performed the exercise. This may be helpful in predicting the quality of the execution here, but I would like to build a model that is more general. - timestamps should theoretically play no role regarding the execution of exercises</p>
+<p>There are some variables in the data which will be dropped:</p>
+<ul>
+<li>X is the row number</li>
+<li>num_window is an increasing count</li>
+<li>The name of the participant will be dropped. It may be helpful in prediction here but the intention is to build a more general model.</li>
+<li>timestamps should theoretically play no role regarding the execution of exercises. Time differences between the observations have been checked and are quite constant except for periodical outliers.</li>
+</ul>
 <pre class="r"><code># Drop variables as described above
 training &lt;- training[, -(1:7)]</code></pre>
 <p>Additionally, there may be variables that contain virtually no variation. Those are not helpful in prediction and will be dropped as well. First, columns (features) that contain only NAs will be dropped.</p>
@@ -84,14 +90,20 @@ training &lt;- training[, -(1:7)]</code></pre>
 
 nzv &lt;- nearZeroVar(training) # 29
 training &lt;- training[, -nzv]; rm(nzv)</code></pre>
-<p>There are many rows with missing values. As the intended method in this paper is Random Forest, which does not accept missing values, those rows will be dropped.</p>
-<pre class="r"><code>training &lt;- training[complete.cases(training), ]</code></pre>
-<p>There are 117 predictors left. The variable “classe” is to be predicted.</p>
+<p>Furthermore, variables that have virtually only missing values will be dropped, too. Many variables have over 19000 missing values. The number of rows is 19622.</p>
+<pre class="r"><code># Which features have many NAs?
+NAsummary &lt;- apply(X = training, 2, function(x) sum(is.na(x)))
+plot(NAsummary, ylab = &quot;Number of missing values&quot;, xlab = &quot;Variables&quot;)</code></pre>
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-5" /></p>
+<pre class="r"><code># Drop all that have more than 5000 NAs, those are the ones with practically
+# only missing values
+training &lt;- training[, -which(NAsummary &gt; 5000)]</code></pre>
+<p>There are 52 predictors left. The variable “classe” is to be predicted. It represents the correct way of doing an exercise (class A) and several typical mistakes while doing a certain exercise (the other four classes).</p>
 <pre class="r"><code>str(training$classe)</code></pre>
 <pre><code>##  Factor w/ 5 levels &quot;A&quot;,&quot;B&quot;,&quot;C&quot;,&quot;D&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...</code></pre>
 <div id="partition-data" class="section level4">
 <h4>Partition data</h4>
-<p>There are 217 cases in the training data. The data will be split into a training set (70%) and test set(30%). The testing set contains just <code>nrow (testing)</code> cases and won’t be used in this paper.</p>
+<p>There are 19622 cases in the training data. The data will be split into a training set (70%) and test set(30%). The testing set contains just 20 cases and won’t be used in this paper.</p>
 <pre class="r"><code>inTest &lt;- createDataPartition(y = training$classe, p=0.3, list=FALSE)
 test &lt;- training[inTest,]
 
@@ -99,360 +111,109 @@ training &lt;- training[-inTest,]
 
 # Check
 dim(training)</code></pre>
-<pre><code>## [1] 149 118</code></pre>
+<pre><code>## [1] 13733    53</code></pre>
 <pre class="r"><code>dim(test)</code></pre>
-<pre><code>## [1]  68 118</code></pre>
+<pre><code>## [1] 5889   53</code></pre>
 </div>
 </div>
 <div id="model-building" class="section level2">
 <h2>Model building</h2>
-<p>For prediction the Random Forest algorithm will be used. It uses bootstrapped samples to estimate decision trees. At each split, also the variables that are used as predictors are bootstrapped. All trained trees then “vote” for the class that should be predicted. This algorithm is relatively accurate but prone to overfitting. The CV set will be used to deal with overfitting.</p>
+<p>For prediction the Random Forest algorithm will be used. It uses bootstrapped samples to estimate decision trees. At each split, also the variables that are used as predictors are bootstrapped. All trained trees then “vote” for the class that should be predicted. This algorithm is relatively accurate but prone to overfitting. I chose 20 trees to be trained by the randomForest() function because the estimation takes very long otherwise.</p>
 <pre class="r"><code># All variables as predictors
-modFit &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;)</code></pre>
+modFit &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;, ntree=20)</code></pre>
 <pre><code>## Loading required package: randomForest
 ## randomForest 4.6-10
 ## Type rfNews() to see new features/changes/bug fixes.</code></pre>
 <pre class="r"><code>modFit</code></pre>
 <pre><code>## Random Forest 
 ## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 13733 samples
+##    52 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## No pre-processing
 ## Resampling: Bootstrapped (25 reps) 
 ## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
+## Summary of sample sizes: 13733, 13733, 13733, 13733, 13733, 13733, ... 
 ## 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.7       0.6    0.06         0.07    
-##    59   0.7       0.6    0.07         0.09    
-##   117   0.7       0.6    0.07         0.08    
+##    2    1         1      0.001        0.002   
+##   27    1         1      0.002        0.002   
+##   52    1         1      0.004        0.005   
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 59.</code></pre>
-<p>Additionally, two more models will be trained that contain less predictors. Instead of the original predictors n principal components will be used. In the paper that accompanies the data set the authors used only 17 of 96 derived features (p3, <a href="http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf">Qualitative Activity Recognition of Weight Lifting Exercises</a>).</p>
-<p>Thus, models with 10, 17 and 40 predictors will be trained. These choices are a bit arbitrary but within the scope of this paper this approach should suffice. Additionally, a model that uses PCs that contain 95% of the variance will be estimated.</p>
-<pre class="r"><code>modFit10 &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;, 
-                  preProcess = &quot;pca&quot;, pcaComp = 10)</code></pre>
-<pre><code>## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range</code></pre>
-<pre class="r"><code>modFit10</code></pre>
+## The final value used for the model was mtry = 27.</code></pre>
+<p>Additionally, more models will be trained that contain less predictors. Instead of the original predictors n principal components will be used. In the paper that accompanies the data set the authors used only 17 of 96 derived features (p. 3, <a href="http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf">Qualitative Activity Recognition of Weight Lifting Exercises</a>).</p>
+<p>Thus, a model with 17 PCs and a model that uses PCs that contain 90% of the variance will be estimated.</p>
+<pre class="r"><code>modFit17 &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;, ntree = 20, 
+                  preProcess = &quot;pca&quot;, pcaComp = 17)
+modFit17</code></pre>
 <pre><code>## Random Forest 
 ## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 13733 samples
+##    52 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## Pre-processing: principal component signal extraction, scaled, centered 
 ## Resampling: Bootstrapped (25 reps) 
 ## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
+## Summary of sample sizes: 13733, 13733, 13733, 13733, 13733, 13733, ... 
 ## 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.3    0.07         0.09    
-##    59   0.4       0.3    0.06         0.08    
-##   117   0.4       0.3    0.06         0.08    
+##    2    0.9       0.9    0.005        0.006   
+##   27    0.9       0.9    0.007        0.008   
+##   52    0.9       0.9    0.006        0.008   
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 2.</code></pre>
-<pre class="r"><code>modFit17 &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;, 
-                  preProcess = &quot;pca&quot;, pcaComp = 17)</code></pre>
-<pre><code>## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range</code></pre>
-<pre class="r"><code>modFit17</code></pre>
+<pre class="r"><code>modFit90p &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;, ntree = 20,
+                  preProcess = &quot;pca&quot;, thresh = 0.9)
+modFit90p</code></pre>
 <pre><code>## Random Forest 
 ## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 13733 samples
+##    52 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## Pre-processing: principal component signal extraction, scaled, centered 
 ## Resampling: Bootstrapped (25 reps) 
 ## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
+## Summary of sample sizes: 13733, 13733, 13733, 13733, 13733, 13733, ... 
 ## 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.3    0.08         0.09    
-##    59   0.5       0.3    0.08         0.10    
-##   117   0.5       0.3    0.08         0.09    
+##    2    0.9       0.9    0.004        0.006   
+##   27    0.9       0.9    0.006        0.007   
+##   52    0.9       0.9    0.006        0.007   
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 2.</code></pre>
-<pre class="r"><code>modFit40 &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;, 
-                  preProcess = &quot;pca&quot;, pcaComp = 40)</code></pre>
-<pre><code>## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range</code></pre>
-<pre class="r"><code>modFit40</code></pre>
-<pre><code>## Random Forest 
-## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## Pre-processing: principal component signal extraction, scaled, centered 
-## Resampling: Bootstrapped (25 reps) 
-## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
-## 
-## Resampling results across tuning parameters:
-## 
-##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.3    0.06         0.08    
-##    59   0.4       0.3    0.07         0.08    
-##   117   0.4       0.3    0.06         0.08    
-## 
-## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 2.</code></pre>
-<pre class="r"><code>modFit95p &lt;- train(classe ~ ., data = training, method=&quot;rf&quot;, 
-                  preProcess = &quot;pca&quot;, thresh = 0.95)</code></pre>
-<pre><code>## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range</code></pre>
-<pre class="r"><code>modFit95p</code></pre>
-<pre><code>## Random Forest 
-## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## Pre-processing: principal component signal extraction, scaled, centered 
-## Resampling: Bootstrapped (25 reps) 
-## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
-## 
-## Resampling results across tuning parameters:
-## 
-##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.4       0.3    0.07         0.08    
-##    59   0.4       0.3    0.08         0.09    
-##   117   0.4       0.3    0.07         0.08    
-## 
-## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 117.</code></pre>
-<p>The models achieved the following in sample accuracies: * all variables: 0.6601</p>
+<p>To sum up, the models achieved the following accuracies:</p>
 <ul>
-<li><p>40 PC: 0.4524</p></li>
-<li><p>17 PC: 0.4615</p></li>
-<li><p>10 PC: 0.4598</p></li>
-<li><p>95% variance PCs: 0.4443</p></li>
+<li>All variables: 98.1021 percent</li>
+<li>17 PCs: 93.6291 percent</li>
+<li>90% variance PCs: 93.6857 percent</li>
 </ul>
-<p>The model with all possible features has shown the best performance and will be tested using the test set.</p>
-<pre class="r"><code>pred &lt;- predict(modFit, test)</code></pre>
-<pre><code>## Loading required package: randomForest
-## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre class="r"><code>test$predRight &lt;- pred==test$classe
+<p>The model with all 52 chosen features has shown the best performance and will be tested using the test set.</p>
+<pre class="r"><code>pred &lt;- predict(modFit, test)
+test$predRight &lt;- pred==test$classe
 modtable &lt;- table(pred, test$classe)
 # Accuracy
 acctest &lt;- sum(diag(modtable)) / nrow(test)</code></pre>
-<p>The model achieves an accuracy of 0.8235. This is also to be expected in further out of sample applications since the test set was not used before to judge the model.</p>
+<p>The model achieves an accuracy of 0.9929. This is also to be expected in further out of sample applications since the test set was not used before to judge or evaluate the model. Below is a table that compares predictions and actual classes in the test set. All values on the main diagonal represent correct predictions.</p>
 <pre class="r"><code>modtable</code></pre>
 <pre><code>##     
-## pred  A  B  C  D  E
-##    A 15  1  1  3  1
-##    B  2 13  0  0  1
-##    C  0  0 11  0  1
-##    D  0  1  0  8  1
-##    E  0  0  0  0  9</code></pre>
+## pred    A    B    C    D    E
+##    A 1672    7    0    1    0
+##    B    1 1124    5    0    2
+##    C    0    8 1019   11    0
+##    D    0    1    3  953    2
+##    E    1    0    0    0 1079</code></pre>
 </div>
 
 

@@ -33,10 +33,11 @@ test <- read.csv("testing.csv", na.strings = c("#DIV/0!", "NA"))
 
 ## Data processing
 There are some variables in the data which will be dropped:
-- X is the row number
-- num_window is an increasing count
-- user_name is the name of the person who performed the exercise. This may be helpful in predicting the quality of the execution here, but I would like to build a model that is more general.
-- timestamps should theoretically play no role regarding the execution of exercises
+
+* X is the row number
+* num_window is an increasing count
+* The name of the participant will be dropped. It may be helpful in prediction here but the intention is to build a more general model.
+* timestamps should theoretically play no role regarding the execution of exercises. Time differences between the observations have been checked and are quite constant except for periodical outliers.
 
 
 ```r
@@ -54,14 +55,24 @@ nzv <- nearZeroVar(training) # 29
 training <- training[, -nzv]; rm(nzv)
 ```
 
-There are many rows with missing values. As the intended method in this paper is Random Forest, which does not accept missing values, those rows will be dropped.
+Furthermore, variables that have virtually only missing values will be dropped, too. Many variables have over 19000 missing values. The number of rows is 19622.
 
 
 ```r
-training <- training[complete.cases(training), ]
+# Which features have many NAs?
+NAsummary <- apply(X = training, 2, function(x) sum(is.na(x)))
+plot(NAsummary, ylab = "Number of missing values", xlab = "Variables")
 ```
 
-There are 117 predictors left. The variable "classe" is to be predicted.
+![plot of chunk unnamed-chunk-5](./Exercise-paper_files/figure-html/unnamed-chunk-5.png) 
+
+```r
+# Drop all that have more than 5000 NAs, those are the ones with practically
+# only missing values
+training <- training[, -which(NAsummary > 5000)]
+```
+
+There are 52 predictors left. The variable "classe" is to be predicted. It represents the correct way of doing an exercise (class A) and several typical mistakes while doing a certain exercise (the other four classes).
 
 
 ```r
@@ -73,7 +84,7 @@ str(training$classe)
 ```
 
 #### Partition data
-There are 217 cases in the training data. The data will be split into a training set (70%) and test set(30%). The testing set contains just `nrow (testing)` cases and won't be used in this paper.
+There are 19622 cases in the training data. The data will be split into a training set (70%) and test set(30%). The testing set contains just 20 cases and won't be used in this paper.
 
 
 ```r
@@ -87,7 +98,7 @@ dim(training)
 ```
 
 ```
-## [1] 149 118
+## [1] 13733    53
 ```
 
 ```r
@@ -95,16 +106,16 @@ dim(test)
 ```
 
 ```
-## [1]  68 118
+## [1] 5889   53
 ```
 
 ## Model building
-For prediction the Random Forest algorithm will be used. It uses bootstrapped samples to estimate decision trees. At each split, also the variables that are used as predictors are bootstrapped. All trained trees then "vote" for the class that should be predicted. This algorithm is relatively accurate but prone to overfitting. The CV set will be used to deal with overfitting.
+For prediction the Random Forest algorithm will be used. It uses bootstrapped samples to estimate decision trees. At each split, also the variables that are used as predictors are bootstrapped. All trained trees then "vote" for the class that should be predicted. This algorithm is relatively accurate but prone to overfitting. I chose 20 trees to be trained by the randomForest() function because the estimation takes very long otherwise.
 
 
 ```r
 # All variables as predictors
-modFit <- train(classe ~ ., data = training, method="rf")
+modFit <- train(classe ~ ., data = training, method="rf", ntree=20)
 ```
 
 ```
@@ -120,404 +131,107 @@ modFit
 ```
 ## Random Forest 
 ## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 13733 samples
+##    52 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## No pre-processing
 ## Resampling: Bootstrapped (25 reps) 
 ## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
+## Summary of sample sizes: 13733, 13733, 13733, 13733, 13733, 13733, ... 
 ## 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.7       0.6    0.06         0.07    
-##    59   0.7       0.6    0.07         0.09    
-##   117   0.7       0.6    0.07         0.08    
+##    2    1         1      0.001        0.002   
+##   27    1         1      0.002        0.002   
+##   52    1         1      0.004        0.005   
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 59.
+## The final value used for the model was mtry = 27.
 ```
 
-Additionally, two more models will be trained that contain less predictors. Instead of the original predictors n principal components will be used. In the paper that accompanies the data set the authors used only 17 of 96 derived features (p3, [Qualitative Activity Recognition of Weight Lifting Exercises](http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf)). 
+Additionally, more models will be trained that contain less predictors. Instead of the original predictors n principal components will be used. In the paper that accompanies the data set the authors used only 17 of 96 derived features (p. 3, [Qualitative Activity Recognition of Weight Lifting Exercises](http://groupware.les.inf.puc-rio.br/public/papers/2013.Velloso.QAR-WLE.pdf)). 
 
-Thus, models with 10, 17 and 40 predictors will be trained. These choices are a bit arbitrary but within the scope of this paper this approach should suffice. Additionally, a model that uses PCs that contain 95% of the variance will be estimated.
+Thus, a model with 17 PCs and a model that uses PCs that contain 90% of the variance will be estimated.
 
 
 ```r
-modFit10 <- train(classe ~ ., data = training, method="rf", 
-                  preProcess = "pca", pcaComp = 10)
-```
-
-```
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-```
-
-```r
-modFit10
-```
-
-```
-## Random Forest 
-## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## Pre-processing: principal component signal extraction, scaled, centered 
-## Resampling: Bootstrapped (25 reps) 
-## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
-## 
-## Resampling results across tuning parameters:
-## 
-##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.3    0.07         0.09    
-##    59   0.4       0.3    0.06         0.08    
-##   117   0.4       0.3    0.06         0.08    
-## 
-## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 2.
-```
-
-```r
-modFit17 <- train(classe ~ ., data = training, method="rf", 
+modFit17 <- train(classe ~ ., data = training, method="rf", ntree = 20, 
                   preProcess = "pca", pcaComp = 17)
-```
-
-```
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-```
-
-```r
 modFit17
 ```
 
 ```
 ## Random Forest 
 ## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 13733 samples
+##    52 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## Pre-processing: principal component signal extraction, scaled, centered 
 ## Resampling: Bootstrapped (25 reps) 
 ## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
+## Summary of sample sizes: 13733, 13733, 13733, 13733, 13733, 13733, ... 
 ## 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.3    0.08         0.09    
-##    59   0.5       0.3    0.08         0.10    
-##   117   0.5       0.3    0.08         0.09    
+##    2    0.9       0.9    0.005        0.006   
+##   27    0.9       0.9    0.007        0.008   
+##   52    0.9       0.9    0.006        0.008   
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 2.
 ```
 
 ```r
-modFit40 <- train(classe ~ ., data = training, method="rf", 
-                  preProcess = "pca", pcaComp = 40)
-```
-
-```
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-```
-
-```r
-modFit40
+modFit90p <- train(classe ~ ., data = training, method="rf", ntree = 20,
+                  preProcess = "pca", thresh = 0.9)
+modFit90p
 ```
 
 ```
 ## Random Forest 
 ## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 13733 samples
+##    52 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## Pre-processing: principal component signal extraction, scaled, centered 
 ## Resampling: Bootstrapped (25 reps) 
 ## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
+## Summary of sample sizes: 13733, 13733, 13733, 13733, 13733, 13733, ... 
 ## 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.5       0.3    0.06         0.08    
-##    59   0.4       0.3    0.07         0.08    
-##   117   0.4       0.3    0.06         0.08    
+##    2    0.9       0.9    0.004        0.006   
+##   27    0.9       0.9    0.006        0.007   
+##   52    0.9       0.9    0.006        0.007   
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 2.
 ```
 
-```r
-modFit95p <- train(classe ~ ., data = training, method="rf", 
-                  preProcess = "pca", thresh = 0.95)
-```
+To sum up, the models achieved the following accuracies:
 
-```
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-## Warning: invalid mtry: reset to within valid range
-```
+* All variables: 98.1021 percent
+* 17 PCs: 93.6291 percent
+* 90% variance PCs: 93.6857 percent
 
-```r
-modFit95p
-```
-
-```
-## Random Forest 
-## 
-## 149 samples
-## 117 predictors
-##   5 classes: 'A', 'B', 'C', 'D', 'E' 
-## 
-## Pre-processing: principal component signal extraction, scaled, centered 
-## Resampling: Bootstrapped (25 reps) 
-## 
-## Summary of sample sizes: 149, 149, 149, 149, 149, 149, ... 
-## 
-## Resampling results across tuning parameters:
-## 
-##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##     2   0.4       0.3    0.07         0.08    
-##    59   0.4       0.3    0.08         0.09    
-##   117   0.4       0.3    0.07         0.08    
-## 
-## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was mtry = 117.
-```
-
-The models achieved the following in sample accuracies:
-* all variables: 0.6601
-
-* 40 PC: 0.4524
-
-* 17 PC: 0.4615
-
-* 10 PC: 0.4598
-
-* 95% variance PCs: 0.4443
-
-The model with all possible features has shown the best performance and will be tested using the test set.
+The model with all 52 chosen features has shown the best performance and will be tested using the test set.
 
 
 ```r
 pred <- predict(modFit, test)
-```
-
-```
-## Loading required package: randomForest
-## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.
-```
-
-```r
 test$predRight <- pred==test$classe
 modtable <- table(pred, test$classe)
 # Accuracy
 acctest <- sum(diag(modtable)) / nrow(test)
 ```
 
-The model achieves an accuracy of 0.8235. This is also to be expected in further out of sample applications since the test set was not used before to judge the model. 
+The model achieves an accuracy of 0.9929. This is also to be expected in further out of sample applications since the test set was not used before to judge or evaluate the model. Below is a table that compares predictions and actual classes in the test set. All values on the main diagonal represent correct predictions.
 
 
 ```r
@@ -526,10 +240,10 @@ modtable
 
 ```
 ##     
-## pred  A  B  C  D  E
-##    A 15  1  1  3  1
-##    B  2 13  0  0  1
-##    C  0  0 11  0  1
-##    D  0  1  0  8  1
-##    E  0  0  0  0  9
+## pred    A    B    C    D    E
+##    A 1672    7    0    1    0
+##    B    1 1124    5    0    2
+##    C    0    8 1019   11    0
+##    D    0    1    3  953    2
+##    E    1    0    0    0 1079
 ```
