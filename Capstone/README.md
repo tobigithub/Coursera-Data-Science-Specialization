@@ -12,18 +12,18 @@ sequence of words which is the purpose of the app. Capstone.R also calculates
 Kneser-Ney-smoothed word probabilities, saves the results and defines several functions
 that were later used for the Shiny app.
 
-Interface and main features
+## Interface and main features
 ========================================================
 * Prediction of the next word (top prediction largest)
 * Probable next words: a Markov Chain prediction of the continuation of the sentence given the top prediction
 * Supports German and English
 
-Additional features
+## Additional features
 ========================================================
 * The user can choose from two prediction algorithms
 * A gauge for "relative confidence" in the top prediction: the square root of the quantile of the count or probability within its respective group of (skip-)n-grams
 
-Prediction algorithms and data
+## Prediction algorithms and data
 ========================================================
 * *Data*
       + The predictions are based on 7.5 million unique (skip-)n-grams ranging from unigrams to
@@ -36,7 +36,7 @@ Prediction algorithms and data
       + Kneser-Ney-smoothing and backoff to skip-n-grams: Recursively
       calculated probabilities of n-grams and backoff to skip-n-grams
 
-Further development and additional information
+## Further development and additional information
 ======================================================
 * In the current version Kneser-Ney-smoothing does not beat Katz backoff in
 benchmarks which can probably be improved
