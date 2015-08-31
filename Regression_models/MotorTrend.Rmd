@@ -1,0 +1,79 @@
+---
+title: "The influence of transmission types on miles per gallon"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+**Executive summary:** On average, cars with manual transmission run 7.25 additional miles per gallon (MPG). When considering other influences on MPG like weight and horsepower some of the additional miles can be attributed to the fact that cars with manual transmission are generally likely to save fuel due to their other features. After controlling for those, cars with manual transmission still run 2.05 miles per gallon more, on average and holding all other characteristics fixed. The effect is not statistically different from zero, though.
+
+## Exploring the data
+The data set consists of 32 observations of 11 variables, namely miles per gallon, the number of cylinders, the displacement, the horsepower, the rear axle ratio, the weight, the quarter mile time, V/S (i.e. engine type), the transmission type, the number of forward gears and the number of carburetors. The cars in the sample were all built in 1973 or 1974. These cars reach on average ```r mean(mtcars$mpg)``` miles per gallon.
+
+Regarding the difference between cars with automatic and manual transmission calculating the mean MPG shows that cars with manual transmission run on average 7.25 miles per gallon more. Furthermore the two groups do not overlap very much (see Appendix A for a boxplot) and the coefficient on the transmission type (am) is highly significant in a simple regression model (not shown here). This observation serves as a first impression concerning the influence of the transmission type. To make a more reliable statement about the size of the effect a multivariate regression model is estimated in the next chapter.
+
+## Controlling for additional influences on MPG using a multivariate regression model
+As mentioned before, the data set includes various other variables which can be assumed to influence MPG. It follows that due to omitting relevant variables the estimate of a 7.25 MPG difference between manual and automatic transmission is biased. Actually, all variables in the data set have considerable correlations with MPG:
+
+```{r, echo=FALSE}
+cor(mtcars)[,1]
+```
+
+Accordingly, a model using all other variables except for qsec as predictors for MPG was estimated. The 1/4 mile time was excluded as it can be expected to be determined by other variables like horsepower and does not directly influence MPG. This is confirmed by high correlations among these variables.
+
+```{r, echo=FALSE}
+fitfull <- lm(mpg ~ cyl + disp + hp + drat + wt + vs + am  + gear + carb,
+              data = mtcars)
+summary(fitfull)
+# All insignificant probably due to correlations of the predictors
+```
+
+This model achieves a very high R-squared of 86%, however all coefficients are insignificant. The effect of am on mpg is estimated at 1.89 miles per gallon, i.e. a car with manual transmission runs additional 1.89 miles per gallon on average, holding all other variables fixed. 
+
+The diagnostic plots show an obsevation with high leverage, see Appendix C. Furthermore, high correlations among the explanatory variables could be seen in a pairs plot (Appendix B). Therefore the variance inflation factors (VIF) are considered in order to check whether these correlations inflate the standard errors of the variables and lead to high p-values.
+
+```{r, echo=FALSE}
+library(car)
+vif(fitfull)
+# High VIF for: cyl, disp, drat, wt
+```
+
+Very high VIFs are found for the number of cylinders (cyl), the displacement (disp), and the weight (wt). These variables are all highly correlated with each other, see Appendix B. Of these variables, only weight is kept in the model. This model was estimated and the VIFs checked again.
+
+```{r, echo=TRUE}
+fit2 <- lm(mpg ~ hp + drat + wt + vs + am  + gear + carb, data = mtcars)
+summary(fit2)
+vif(fit2) 
+```
+
+This time the intercept and the coefficient on weight are significantly different from zero at about 95% confidence (please refer to the table for exact p-values). The coefficient on am changes to 2.05 and the R-squared is virtually as high as before. All VIFs are quite low and the diagnostic plots show no obvious problems with this specification, see Appendix D. It could perhaps be suspected that there is heteroscedasticity as the variance of the residuals seems to appreciate with larger fitted values. A white test of constant variance fails to reject this null hypothesis, though (not shown here). 
+
+Thus, accepting this model as the best of the considered models, the MPG advantage of manual transmission over automatic transmission is estimated at 2.05 miles per gallon, all other variables fixed. It should be noted though that the coefficient is not significantly different from zero, so after controlling for the other influences it cannot be concluded with certainty that manual transmission leads to a higher MPG.
+
+
+
+## Appendix
+## Appendix A
+```{r, echo=FALSE, fig.width=6, fig.height=4}
+boxplot(mpg ~ am, data = mtcars, col = "gray", ylab = "MPG",
+        xlab = "Transmission type", 
+        main = "MPG for automatic (0) and manual (1) transmission")
+```
+
+## Appendix B
+```{r, echo=FALSE}
+pairs(mtcars[, c("cyl", "disp", "drat", "wt")])
+# All highly correlated, keep only wt
+```
+
+## Appendix C 
+```{r, echo=FALSE}
+par(mfrow = c(2,2))
+plot(fitfull)
+```
+
+## Appendix D
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(fit2) # OK
+```
