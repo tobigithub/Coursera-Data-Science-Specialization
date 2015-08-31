@@ -3,17 +3,6 @@ library(data.table)
 library(tau)
 library(plyr)
 
-rm(list = ls())
-
-if (Sys.info()['sysname'] == "Windows"){
-      setwd("W:\\asc90698583\\Wuala Sync\\Diverses\\Coursera\\DATA SCIENCE SPECIALIZATION\\10 Capstone\\R\\")
-} else setwd("/home/khl4v/Wuala Sync/Diverses/Coursera/DATA SCIENCE SPECIALIZATION/10 Capstone/R/")
-
-showMb <- function(objects = ls(envir = .GlobalEnv)){
-      sapply(objects, function(x) format(object.size(get(x)), units = "Mb"))
-}
-# load(".RData")
-
 en_Twitter <- readLines("Data\\en_US\\en_US.twitter.txt", encoding = "UTF-8")
 en_Twitter <- readLines("Data/en_US/en_US.twitter.txt", encoding = "UTF-8")
 en_News <- readLines("Data\\en_US\\en_US.news.txt", encoding = "UTF-8")
@@ -21,68 +10,7 @@ en_News <- readLines("Data/en_US/en_US.news.txt", encoding = "UTF-8")
 en_Blogs <- readLines("Data\\en_US\\en_US.blogs.txt", encoding = "UTF-8")
 en_Blogs <- readLines("Data/en_US/en_US.blogs.txt", encoding = "UTF-8")
 
-# Quiz 1 ----------------------------------------------------------------------
-# Question 2
-# The en_US.twitter.txt has how many lines of text?
-# Over 2 million
-
-# Question 3
-# What is the length of the longest line seen in any of the three en_US data sets?
-lenTwitter <- sapply(en_Twitter, nchar) # max 140. Twitter halt...
-lenBlogs <- sapply(en_Blogs, nchar) # max 40830
-lenNews <- sapply(en_News, nchar) # max 5760
-# Over 40 thousand in the blogs data set
-
-# Question 4
-# In the en_US twitter data set, if you divide the number of lines where the
-# word "love" (all lowercase) occurs by the number of lines the word "hate"
-# (all lowercase) occurs, about what do you get?
-numLove <- length(grep("love", en_Twitter))
-numHate <- length(grep("hate", en_Twitter))
-# 4
-
-# Question 5
-# The one tweet in the en_US twitter data set that matches the word "biostats" says what?
-en_Twitter[grep("biostats", en_Twitter)]
-# They haven't studied for their biostats exam
-
-# Question 6
-# How many tweets have the exact characters "A computer once beat me at
-# chess, but it was no match for me at kickboxing".
-# (I.e. the line matches those characters exactly.)
-length(grep("A computer once beat me at chess, but it was no match for me at kickboxing",
-            en_Twitter))
-# 3
-
-# Filter profanity ----------------------------------------------------------
-badwords <- readLines("Data/badwords_en.txt")
-badwords <- c(badwords, "fucking")
-
-en_Twitter <- readLines("Data/en_US/en_US.twitter.txt", encoding = "UTF-8")
-badwordIndexTwitter <- sapply(en_Twitter, function(text){
-      any(sapply(X = badwords, function(x) grepl(x, text)))
-})
-save(badwordIndexTwitter, file = "badwordIndexTwitter.RData")
-badwordIndexTwitter <- as.logical(badwordIndexTwitter)
-rm(en_Twitter)
-
-en_News <- readLines("Data/en_US/en_US.news.txt", encoding = "UTF-8")
-badwordIndexNews <- sapply(en_News, function(text){
-      any(sapply(X = badwords, function(x) grepl(x, text)))
-})
-save(badwordIndexNews, file = "badwordIndexNews.RData")
-badwordIndexNews <- as.logical(badwordIndexNews)
-rm(en_News)
-
-en_Blogs <- readLines("Data/en_US/en_US.blogs.txt", encoding = "UTF-8")
-badwordIndexBlogs <- sapply(en_Blogs, function(text){
-      any(sapply(X = badwords, function(x) grepl(x, text)))
-})
-save(badwordIndexBlogs, file = "badwordIndexBlogs.RData")
-badwordIndexBlogs <- as.logical(badwordIndexBlogs)
-rm(en_Blogs)
-
-# Erstellen der n-grams in Skript "Capstone n-grams erstellen"
+# create n-grams in "Capstone create n-grams.R"
 
 #-----------------------------------------------------------------------------
 
@@ -150,8 +78,8 @@ predictSimple("Adam Sandler is the only", allTokens2, allBigrams2, allTrigrams2)
 
 
 #--------------------------------------------------------------------------
-# Kneser-Ney smoothing. Die Tabellen mit den Häufigkeiten in Kneser-Ney-
-# Wahrscheinlichkeiten umrechnen
+# Kneser-Ney smoothing. Convert "tables" of counts to Kneser-Ney-smoothed
+# probabilities
 
 ### Bigrams
 load("allBigrams_clean.RData")
@@ -179,29 +107,29 @@ allBigramsKN[count > 2]$D <- 3 - 4 * Y * (nrow(allBigramsKN[count == 4]) /
                                                 nrow(allBigramsKN[count == 3]))
 # 1.4
 allBigramsKN[, count := count - D]
-# Teilen durch c(w_{i-1}): Count of allBigramsKN$ngram (aus allTokens)
+# divide by c(w_{i-1}): Count of allBigramsKN$ngram (from allTokens)
 load("allTokens_clean.RData")
 allBigramsKN <- merge(allBigramsKN, allTokens, by = "ngram")
 setnames(allBigramsKN, c("ngram", "count", "nextword", "D", "ngramcount"))
 allBigramsKN[, count := count / ngramcount]
-# lambda berechnen
+# calculate lambda
 allBigramsKN[, lambda := D / ngramcount]
 NNextwords <- allBigramsKN[, .(ngram.NNextwords = length(nextword)), by = ngram]
 allBigramsKN <- merge(allBigramsKN, NNextwords, by = "ngram")
 rm(NNextwords)
 allBigramsKN[, lambda := lambda * ngram.NNextwords]
-# P(continuation) berechnen
+# calculate P(continuation)
 NNewCont <- allBigramsKN[, .(nextword.NNewCont = length(ngram)), by = nextword]
 allBigramsKN <- merge(allBigramsKN, NNewCont, by = "nextword")
 allBigramsKN[, Pcont := nextword.NNewCont / nrow(allBigramsKN)]
-# lambda * Pcont zum ersten Teil des Terms für P_{KN} addieren
+# add lambda * Pcont to the term for P_{KN}
 allBigramsKN[, count := count + lambda * Pcont]
 save(allBigramsKN, file = "allBigramsKN.RData")
 
 ### Trigrams
-# load("allTrigrams_clean.RData")
-# allTrigrams <- allTrigrams[count > 1] # spart 1.5GB
-# save(allTrigrams, file = "allTrigrams_clean_pruned.RData")
+load("allTrigrams_clean.RData")
+allTrigrams <- allTrigrams[count > 1] # saves 1.5GB
+save(allTrigrams, file = "allTrigrams_clean_pruned.RData")
 load("allTrigrams_clean_pruned.RData")
 allTrigramsKN <- allTrigrams
 rm(allTrigrams); gc()
@@ -216,32 +144,30 @@ rm(trigrams)
 setkey(allTrigramsKN, "count", "ngram")
 # Discounting
 allTrigramsKN[, D := 0]
-# Muss ausweichen auf count 2 und 3
+# using trigrams with count = 2 or 3
 Y <- (nrow(allTrigramsKN[count == 2]) /
             (nrow(allTrigramsKN[count == 2]) + 2 * nrow(allTrigramsKN[count == 3])))
 # = 0.6
-# allTrigramsKN[count == 1]$D <- 1 - 2 * Y * (nrow(allTrigramsKN[count == 2]) /
-#                                                  nrow(allTrigramsKN[count == 1]))
 allTrigramsKN[count == 2]$D <- 2 - 3 * Y * (nrow(allTrigramsKN[count == 3]) /
                                                   nrow(allTrigramsKN[count == 2]))
 allTrigramsKN[count > 2]$D <- 3 - 4 * Y * (nrow(allTrigramsKN[count == 4]) /
                                                  nrow(allTrigramsKN[count == 3]))
 allTrigramsKN[, count := count - D]
-# Teilen durch c(w_{i-1}): Count of allTrigramsKN$ngram (aus allBigrams)
+# divide by c(w_{i-1}): Count of allTrigramsKN$ngram (from allBigrams)
 load("allBigrams_clean.RData")
 allTrigramsKN <- merge(allTrigramsKN, allBigrams, by = "ngram")
 setnames(allTrigramsKN, c("ngram", "count", "nextword", "D", "ngramcount"))
 allTrigramsKN[, count := count / ngramcount]
 rm(allBigrams); gc()
-# lambda berechnen
+# calculate lambda
 allTrigramsKN[, lambda := D / ngramcount]
 NNextwords <- allTrigramsKN[, .(ngram.NNextwords = length(nextword)), by = ngram]
 allTrigramsKN <- merge(allTrigramsKN, NNextwords, by = "ngram")
 rm(NNextwords)
 allTrigramsKN[, lambda := lambda * ngram.NNextwords]
-# P_{KN}(wi | w^{i-1}_{i-n+2}), also P_{KN} vom letzten Wort von ngram und nextword
-# aus allBigramsKN
-# 2. Teil des n-grams als n-gram für die Bigrams-Tabelle
+# P_{KN}(wi | w^{i-1}_{i-n+2}), i.e. P_{KN} of the last word of ngram and nextword
+# from allBigramsKN
+# 2. part of the n-gram for the table of bigrams
 load("allBigramsKN.RData")
 lowerNgram <- as.character(sapply(allTrigramsKN$ngram,
                                   function(x) unlist(strsplit(x, split = " "))[2]))
@@ -253,15 +179,15 @@ allTrigramsKN <- merge(allTrigramsKN, allBigramsKN2, by = c("lowerNgram", "nextw
 setnames(allTrigramsKN, c("lowerNgram", "nextword", "ngram", "count",
                           "D", "ngramcount", "lambda", "ngram.NNextwords",
                           "PknLower"))
-# lambda * PknLower zum ersten Teil des Terms für P_{KN} addieren
+# add lambda * PknLower to the term for P_{KN}
 allTrigramsKN[, count := count + lambda * PknLower]
 save(allTrigramsKN, file = "allTrigramsKN.RData")
 
 
 ### Fourgrams
-# load("allFourgrams_clean.RData")
-# allFourgrams <- allFourgrams[count > 1] # spart 1,8GB
-# save(allFourgrams, file = "allFourgrams_clean_pruned.RData")
+load("allFourgrams_clean.RData")
+allFourgrams <- allFourgrams[count > 1] # saves 1,8GB
+save(allFourgrams, file = "allFourgrams_clean_pruned.RData")
 load("allFourgrams_clean_pruned.RData")
 allFourgramsKN <- allFourgrams
 rm(allFourgrams); gc()
@@ -276,32 +202,29 @@ rm(fourgrams)
 setkey(allFourgramsKN, "count", "ngram")
 # Discounting
 allFourgramsKN[, D := 0]
-# Muss ausweichen auf count 2 und 3
 Y <- (nrow(allFourgramsKN[count == 2]) /
             (nrow(allFourgramsKN[count == 2]) + 2 * nrow(allFourgramsKN[count == 3])))
 # = 0.6
-# allFourgramsKN[count == 1]$D <- 1 - 2 * Y * (nrow(allFourgramsKN[count == 2]) /
-#                                                  nrow(allFourgramsKN[count == 1]))
 allFourgramsKN[count == 2]$D <- 2 - 3 * Y * (nrow(allFourgramsKN[count == 3]) /
                                                    nrow(allFourgramsKN[count == 2]))
 allFourgramsKN[count > 2]$D <- 3 - 4 * Y * (nrow(allFourgramsKN[count == 4]) /
                                                   nrow(allFourgramsKN[count == 3]))
 allFourgramsKN[, count := count - D]
-# Teilen durch c(w_{i-1}): Count of allFourgramsKN$ngram (aus allTrigrams)
+# divide by c(w_{i-1}): Count of allFourgramsKN$ngram (from allTrigrams)
 load("allTrigrams_clean_pruned.RData")
 allFourgramsKN <- merge(allFourgramsKN, allTrigrams, by = "ngram")
 setnames(allFourgramsKN, c("ngram", "count", "nextword", "D", "ngramcount"))
 allFourgramsKN[, count := count / ngramcount]
 rm(allTrigrams); gc()
-# lambda berechnen
+# lambda
 allFourgramsKN[, lambda := D / ngramcount]
 NNextwords <- allFourgramsKN[, .(ngram.NNextwords = length(nextword)), by = ngram]
 allFourgramsKN <- merge(allFourgramsKN, NNextwords, by = "ngram")
 rm(NNextwords)
 allFourgramsKN[, lambda := lambda * ngram.NNextwords]
-# P_{KN}(wi | w^{i-1}_{i-n+2}), also P_{KN} vom letzten Wort von ngram und nextword
-# aus allTrigramsKN
-# 2. Teil des n-grams als n-gram für die Trigrams-Tabelle
+# P_{KN}(wi | w^{i-1}_{i-n+2}), i.e. P_{KN} of the last word of ngram and nextword
+# from allTrigramsKN
+# 2. part of the n-grams as n-gram for the table of Trigrams
 load("allTrigramsKN.RData")
 lowerNgram <- as.character(sapply(allFourgramsKN$ngram,
                                   function(x){
@@ -317,10 +240,9 @@ allFourgramsKN <- merge(allFourgramsKN, allTrigramsKN2,
 setnames(allFourgramsKN, c("lowerNgram", "nextword", "ngram", "count",
                            "D", "ngramcount", "lambda", "ngram.NNextwords",
                            "PknLower"))
-# lambda * PknLower zum ersten Teil des Terms für P_{KN} addieren
+# add lambda * PknLower to the term for P_{KN}
 allFourgramsKN[, count := count + lambda * PknLower]
 save(allFourgramsKN, file = "allFourgramsKN.RData")
-
 
 
 # Kneser-Ney-Smoothing German -----------------------------------------------
@@ -350,22 +272,22 @@ allBigramsKN[count > 2]$D <- 3 - 4 * Y * (nrow(allBigramsKN[count == 4]) /
                                                 nrow(allBigramsKN[count == 3]))
 # 1.4
 allBigramsKN[, count := count - D]
-# Teilen durch c(w_{i-1}): Count of allBigramsKN$ngram (aus allTokens)
+# divide by c(w_{i-1}): Count of allBigramsKN$ngram (from allTokens)
 load("allTokens_clean_de.RData")
 allBigramsKN <- merge(allBigramsKN, allTokens, by = "ngram")
 setnames(allBigramsKN, c("ngram", "count", "nextword", "D", "ngramcount"))
 allBigramsKN[, count := count / ngramcount]
-# lambda berechnen
+# lambda
 allBigramsKN[, lambda := D / ngramcount]
 NNextwords <- allBigramsKN[, .(ngram.NNextwords = length(nextword)), by = ngram]
 allBigramsKN <- merge(allBigramsKN, NNextwords, by = "ngram")
 rm(NNextwords)
 allBigramsKN[, lambda := lambda * ngram.NNextwords]
-# P(continuation) berechnen
+# P(continuation)
 NNewCont <- allBigramsKN[, .(nextword.NNewCont = length(ngram)), by = nextword]
 allBigramsKN <- merge(allBigramsKN, NNewCont, by = "nextword")
 allBigramsKN[, Pcont := nextword.NNewCont / nrow(allBigramsKN)]
-# lambda * Pcont zum ersten Teil des Terms für P_{KN} addieren
+# add lambda * Pcont to the term for  P_{KN}
 allBigramsKN[, count := count + lambda * Pcont]
 save(allBigramsKN, file = "allBigramsKN_de.RData")
 
@@ -384,32 +306,30 @@ rm(trigrams)
 setkey(allTrigramsKN, "count", "ngram")
 # Discounting
 allTrigramsKN[, D := 0]
-# Muss ausweichen auf count 2 und 3
+# count 2 or 3
 Y <- (nrow(allTrigramsKN[count == 2]) /
             (nrow(allTrigramsKN[count == 2]) + 2 * nrow(allTrigramsKN[count == 3])))
 # = 0.6
-# allTrigramsKN[count == 1]$D <- 1 - 2 * Y * (nrow(allTrigramsKN[count == 2]) /
-#                                                  nrow(allTrigramsKN[count == 1]))
 allTrigramsKN[count == 2]$D <- 2 - 3 * Y * (nrow(allTrigramsKN[count == 3]) /
                                                   nrow(allTrigramsKN[count == 2]))
 allTrigramsKN[count > 2]$D <- 3 - 4 * Y * (nrow(allTrigramsKN[count == 4]) /
                                                  nrow(allTrigramsKN[count == 3]))
 allTrigramsKN[, count := count - D]
-# Teilen durch c(w_{i-1}): Count of allTrigramsKN$ngram (aus allBigrams)
+# divide by c(w_{i-1}): Count of allTrigramsKN$ngram (from allBigrams)
 load("allBigrams_clean_de.RData")
 allTrigramsKN <- merge(allTrigramsKN, allBigrams, by = "ngram")
 setnames(allTrigramsKN, c("ngram", "count", "nextword", "D", "ngramcount"))
 allTrigramsKN[, count := count / ngramcount]
 rm(allBigrams); gc()
-# lambda berechnen
+# calculate lambda
 allTrigramsKN[, lambda := D / ngramcount]
 NNextwords <- allTrigramsKN[, .(ngram.NNextwords = length(nextword)), by = ngram]
 allTrigramsKN <- merge(allTrigramsKN, NNextwords, by = "ngram")
 rm(NNextwords)
 allTrigramsKN[, lambda := lambda * ngram.NNextwords]
-# P_{KN}(wi | w^{i-1}_{i-n+2}), also P_{KN} vom letzten Wort von ngram und nextword
-# aus allBigramsKN
-# 2. Teil des n-grams als n-gram für die Bigrams-Tabelle
+# P_{KN}(wi | w^{i-1}_{i-n+2}), i.e. P_{KN} of the last word of ngram and nextword
+# from allBigramsKN
+# 2. Teil of the n-grams as n-gram for the table of bigrams
 load("allBigramsKN_de.RData")
 lowerNgram <- as.character(sapply(allTrigramsKN$ngram,
                                   function(x) unlist(strsplit(x, split = " "))[2]))
@@ -421,7 +341,7 @@ allTrigramsKN <- merge(allTrigramsKN, allBigramsKN2, by = c("lowerNgram", "nextw
 setnames(allTrigramsKN, c("lowerNgram", "nextword", "ngram", "count",
                           "D", "ngramcount", "lambda", "ngram.NNextwords",
                           "PknLower"))
-# lambda * PknLower zum ersten Teil des Terms für P_{KN} addieren
+# add lambda * PknLower to the term for P_{KN}
 allTrigramsKN[, count := count + lambda * PknLower]
 save(allTrigramsKN, file = "allTrigramsKN_de.RData")
 
@@ -441,32 +361,30 @@ rm(fourgrams)
 setkey(allFourgramsKN, "count", "ngram")
 # Discounting
 allFourgramsKN[, D := 0]
-# Muss ausweichen auf count 2 und 3
+# count 2 und 3
 Y <- (nrow(allFourgramsKN[count == 2]) /
             (nrow(allFourgramsKN[count == 2]) + 2 * nrow(allFourgramsKN[count == 3])))
 # = 0.6
-# allFourgramsKN[count == 1]$D <- 1 - 2 * Y * (nrow(allFourgramsKN[count == 2]) /
-#                                                  nrow(allFourgramsKN[count == 1]))
 allFourgramsKN[count == 2]$D <- 2 - 3 * Y * (nrow(allFourgramsKN[count == 3]) /
                                                    nrow(allFourgramsKN[count == 2]))
 allFourgramsKN[count > 2]$D <- 3 - 4 * Y * (nrow(allFourgramsKN[count == 4]) /
                                                   nrow(allFourgramsKN[count == 3]))
 allFourgramsKN[, count := count - D]
-# Teilen durch c(w_{i-1}): Count of allFourgramsKN$ngram (aus allTrigrams)
+# divide by c(w_{i-1}): Count of allFourgramsKN$ngram (from allTrigrams)
 load("allTrigrams_clean_de.RData")
 allFourgramsKN <- merge(allFourgramsKN, allTrigrams, by = "ngram")
 setnames(allFourgramsKN, c("ngram", "count", "nextword", "D", "ngramcount"))
 allFourgramsKN[, count := count / ngramcount]
 rm(allTrigrams); gc()
-# lambda berechnen
+# lambda
 allFourgramsKN[, lambda := D / ngramcount]
 NNextwords <- allFourgramsKN[, .(ngram.NNextwords = length(nextword)), by = ngram]
 allFourgramsKN <- merge(allFourgramsKN, NNextwords, by = "ngram")
 rm(NNextwords)
 allFourgramsKN[, lambda := lambda * ngram.NNextwords]
-# P_{KN}(wi | w^{i-1}_{i-n+2}), also P_{KN} vom letzten Wort von ngram und nextword
-# aus allTrigramsKN
-# 2. Teil des n-grams als n-gram für die Trigrams-Tabelle
+# P_{KN}(wi | w^{i-1}_{i-n+2}), i.e. P_{KN} of the last word of ngram and nextword
+# from allTrigramsKN
+# 2. part of the n-grams as n-gram for the table of trigrams
 load("allTrigramsKN_de.RData")
 lowerNgram <- as.character(sapply(allFourgramsKN$ngram,
                                   function(x){
@@ -482,7 +400,7 @@ allFourgramsKN <- merge(allFourgramsKN, allTrigramsKN2,
 setnames(allFourgramsKN, c("lowerNgram", "nextword", "ngram", "count",
                            "D", "ngramcount", "lambda", "ngram.NNextwords",
                            "PknLower"))
-# lambda * PknLower zum ersten Teil des Terms für P_{KN} addieren
+# add lambda * PknLower to the term for P_{KN}
 allFourgramsKN[, count := count + lambda * PknLower]
 save(allFourgramsKN, file = "allFourgramsKN_de.RData")
 
@@ -711,7 +629,7 @@ allData2 <- lapply(allData2, function(x){
       len <- nrow(x)
       return(x[round(len / 2) : len, ])
 })
-# allData2 hat noch ca. 330 MB
+# allData2 = 330 MB
 
 # Drop all German nextwords that consist of more than one upper case letter
 germanIndices <- grep("_de", names(allData2))
@@ -720,9 +638,9 @@ allData2[germanIndices] <- lapply(allData2[germanIndices], function(x){
       delete <- grep("[A-Z]{2,}", x$nextword)
       return(x[-delete, ])
 })
-# ca. 1MB weniger insgesamt
+# about 1MB less
 
-# Quantiles der counts berechnen, für confidence
+# Quantiles of the counts, for confidence score
 minmax <- lapply(allData2, function(x){
       data.table(mininum = min(x$count),
                  maximum = max(x$count))
@@ -759,8 +677,6 @@ predictNextword_en <- function(input = NULL, ngramData, useKN = T, nPred = 3){
             }
       }
       if (length(fourgramPred) >= nPred){
-#             print("fourgramPred")
-            #                         print(fourgramPred)
             return(data.table(pred = fourgramPred, confidence = confidence))
       } else {
             predComb <- fourgramPred
@@ -789,7 +705,6 @@ predictNextword_en <- function(input = NULL, ngramData, useKN = T, nPred = 3){
             }
             predComb <- c(predComb, trigramPred)
             if (length(unique(predComb)) >= nPred){
-#                   print("trigramPred")
                   return(data.table(pred = unique(predComb)[1:nPred],
                                     confidence = confidence))
             } else {
@@ -814,7 +729,6 @@ predictNextword_en <- function(input = NULL, ngramData, useKN = T, nPred = 3){
                   }
                   predComb <- c(predComb, bigramPred)
                   if (length(unique(predComb)) >= nPred){
-#                         print("bigramPred")
                         return(data.table(pred = unique(predComb)[1:nPred],
                                           confidence = confidence))
                   } else {
@@ -829,7 +743,6 @@ predictNextword_en <- function(input = NULL, ngramData, useKN = T, nPred = 3){
                         }
                         predComb <- c(predComb, skipfivegramPred)
                         if (length(unique(predComb)) >= nPred){
-#                               print("skipfivegramPred")
                               return(data.table(pred = unique(predComb)[1:nPred],
                                                 confidence = confidence))
                         } else {
@@ -843,14 +756,12 @@ predictNextword_en <- function(input = NULL, ngramData, useKN = T, nPred = 3){
                               }
                               predComb <- c(predComb, skipsixgramPred)
                               if (length(unique(predComb)) >= nPred){
-#                                     print("skipsixgramPred")
                                     return(data.table(pred = unique(predComb)[1:nPred],
                                                       confidence = confidence))
                               } else {
                                     # No matching (skip) n-grams found
                                     tokenPred <- rev(tail(ngramData$allTokens_en$nextword, nPred))
                                     predComb <- c(predComb, tokenPred)
-#                                     print("tokenPred")
                                     return(data.table(pred = unique(predComb)[1:nPred],
                                                       confidence = confidence))
                               }
@@ -897,8 +808,6 @@ predictNextword_de <- function(input = NULL, ngramData, useKN = T, nPred = 3){
             }
       }
       if (length(fourgramPred) >= nPred){
-            #             print("fourgramPred")
-            #                         print(fourgramPred)
             return(data.table(pred = fourgramPred, confidence = confidence))
       } else {
             predComb <- fourgramPred
@@ -927,7 +836,6 @@ predictNextword_de <- function(input = NULL, ngramData, useKN = T, nPred = 3){
             }
             predComb <- c(predComb, trigramPred)
             if (length(unique(predComb)) >= nPred){
-                  #                   print("trigramPred")
                   return(data.table(pred = unique(predComb)[1:nPred],
                                     confidence = confidence))
             } else {
@@ -952,7 +860,6 @@ predictNextword_de <- function(input = NULL, ngramData, useKN = T, nPred = 3){
                   }
                   predComb <- c(predComb, bigramPred)
                   if (length(unique(predComb)) >= nPred){
-                        #                         print("bigramPred")
                         return(data.table(pred = unique(predComb)[1:nPred],
                                           confidence = confidence))
                   } else {
@@ -967,7 +874,6 @@ predictNextword_de <- function(input = NULL, ngramData, useKN = T, nPred = 3){
                         }
                         predComb <- c(predComb, skipfivegramPred)
                         if (length(unique(predComb)) >= nPred){
-                              #                               print("skipfivegramPred")
                               return(data.table(pred = unique(predComb)[1:nPred],
                                                 confidence = confidence))
                         } else {
@@ -981,7 +887,6 @@ predictNextword_de <- function(input = NULL, ngramData, useKN = T, nPred = 3){
                               }
                               predComb <- c(predComb, skipsixgramPred)
                               if (length(unique(predComb)) >= nPred){
-                                    #                                     print("skipsixgramPred")
                                     return(data.table(pred = unique(predComb)[1:nPred],
                                                       confidence = confidence))
                               } else {
@@ -1004,8 +909,3 @@ suppressWarnings(
                          ngramData = allData2, useKN = T)
 )
 
-
-# Simple Horizontal Bar Plot with Added Labels
-dat <- as.table(matrix(data = c(0.1, 0.9), nrow = 2))
-colnames(dat) <- NULL
-barplot(dat, horiz=TRUE, col=c("darkblue","grey"))

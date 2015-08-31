@@ -1,17 +1,16 @@
 ## Capstone project of the Coursera Data Science Specialization in cooperation with swiftkey
 
 These are the main files of my capstone project app. The
-app can be run at [this link](https://thie1e.shinyapps.io/Nextword), ui.R and server.R
-files of the app are in the folder Nextword. If possible
+app can be run at [this link](https://thie1e.shinyapps.io/Nextword), the ui.R and server.R
+files of the app are in the folder Nextword. If possible,
 I am going to add a link to the data so that the creation of the app and the 
 underlying algorithm is completely reproducible.
 
 "Capstone create n-grams.R" has to be run fist to create the necessary RData-files
-that Capstone.R will use later to solve the Coursera-quizzes that asked some
-simple questions about the data and to make predictions for the next word in a 
+that Capstone.R will use later to make predictions for the next word in a 
 sequence of words which is the purpose of the app. Capstone.R also calculates
 Kneser-Ney-smoothed word probabilities, saves the results and defines several functions
-that were later used for the Shiny app.
+that were later used within the Shiny app.
 
 ## Interface and main features
 * Prediction of the next word (top prediction largest)

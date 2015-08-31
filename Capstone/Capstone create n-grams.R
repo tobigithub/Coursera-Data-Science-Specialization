@@ -1,25 +1,12 @@
 library(beepr)
-# library(ngram)
-# library(RWeka)
 library(data.table)
-# library(doSNOW)
 library(tau)
 library(plyr)
-#library(parallel)
-
-rm(list = ls())
-
-if (Sys.info()['sysname'] == "Windows"){
-      setwd("W:\\asc90698583\\Wuala Sync\\Diverses\\Coursera\\DATA SCIENCE SPECIALIZATION\\10 Capstone\\R\\")
-} else setwd("/home/khl4v/Wuala Sync/Diverses/Coursera/DATA SCIENCE SPECIALIZATION/10 Capstone/R/")
 
 source("makeNgrams.R")
 
-en_Twitter <- readLines("Data\\en_US\\en_US.twitter.txt", encoding = "UTF-8")
 en_Twitter <- readLines("Data/en_US/en_US.twitter.txt", encoding = "UTF-8")
-en_News <- readLines("Data\\en_US\\en_US.news.txt", encoding = "UTF-8")
 en_News <- readLines("Data/en_US/en_US.news.txt", encoding = "UTF-8")
-en_Blogs <- readLines("Data\\en_US\\en_US.blogs.txt", encoding = "UTF-8")
 en_Blogs <- readLines("Data/en_US/en_US.blogs.txt", encoding = "UTF-8")
 
 
@@ -290,12 +277,9 @@ save(allSkipSixGrams, file = "allSkipSixGrams_clean.RData")
 
 #--------------------------------------------------------------------
 # German ------------------------------------------------------------
-# de_Twitter <- readLines("Data\\de_DE\\de_DE.twitter.txt", encoding = "UTF-8")
-# de_Twitter <- readLines("Data/de_DE/de_DE.twitter.txt", encoding = "UTF-8")
-# de_News <- readLines("Data\\de_DE\\de_DE.news.txt", encoding = "UTF-8")
-# de_News <- readLines("Data/de_DE/de_DE.news.txt", encoding = "UTF-8")
-# de_Blogs <- readLines("Data\\de_DE\\de_DE.blogs.txt", encoding = "UTF-8")
-# de_Blogs <- readLines("Data/de_DE/de_DE.blogs.txt", encoding = "UTF-8")
+de_Twitter <- readLines("Data/de_DE/de_DE.twitter.txt", encoding = "UTF-8")
+de_News <- readLines("Data/de_DE/de_DE.news.txt", encoding = "UTF-8")
+de_Blogs <- readLines("Data/de_DE/de_DE.blogs.txt", encoding = "UTF-8")
 
 
 # Filter profanity ----------------------------------------------------------
