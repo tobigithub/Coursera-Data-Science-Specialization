@@ -1,9 +1,11 @@
 data/stormdata.csv
 stormdata.csv.bz2
+stormdata.csv
 .RData
 *.Rhistory
 Rprofile
 stormdata.csv
+Stormpaper_cache/
 Stormpaper_cache/html/unnamed-chunk-2_f3906b67ca115cf501812e8260a276fe.RData
 Stormpaper_cache/html/unnamed-chunk-2_f3906b67ca115cf501812e8260a276fe.rdb
 Stormpaper_cache/html/unnamed-chunk-2_f3906b67ca115cf501812e8260a276fe.rdx
