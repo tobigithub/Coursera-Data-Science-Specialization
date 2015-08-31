@@ -1,7 +1,8 @@
 ## Capstone project of the Coursera Data Science Specialization in cooperation with swiftkey
 
 These are the main files of my capstone project app. The
-app can be run at [this link](https://thie1e.shinyapps.io/Nextword). If possible
+app can be run at [this link](https://thie1e.shinyapps.io/Nextword), ui.R and server.R
+files of the app are in the folder Nextword. If possible
 I am going to add a link to the data so that the creation of the app and the 
 underlying algorithm is completely reproducible.
 
