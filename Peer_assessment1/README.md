@@ -1,3 +1,6 @@
+*The solution to this exercise is in PA1_template.md and the corresponding files.
+Following is the text of the exercise:*
+
 ## Introduction
 
 It is now possible to collect a large amount of data about personal
